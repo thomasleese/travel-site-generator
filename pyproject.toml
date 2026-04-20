@@ -1,0 +1,28 @@
+[project]
+name = "travel-site-generator"
+version = "0.1.0"
+description = "A static site generator for creating travel journals."
+readme = "README.md"
+authors = [
+    { name = "Thomas Leese", email = "thomas@leese.io" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "geopy>=2.4.1",
+    "platformdirs>=4.9.6",
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+]
+
+[project.scripts]
+travel-site-generator = "travel_site_generator.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.22,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.11",
+]
