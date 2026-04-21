@@ -93,8 +93,6 @@ class Store:
 
         row = (osm_id, latitude, longitude, name, type, country_code)
 
-        print(row)
-
         self.cursor.execute("INSERT INTO places VALUES (?, ?, ?, ?, ?, ?)", row)
         self.connection.commit()
 
