@@ -15,9 +15,11 @@ class ModeOfTransport(StrEnum):
     CAR = "car"
     FERRY = "ferry"
     FOOT = "foot"
+    METRO = "metro"
     MOTORCYCLE = "motorcycle"
     PLANE = "plane"
     TRAIN = "train"
+    TRAM = "tram"
 
 
 @dataclass(frozen=True)
