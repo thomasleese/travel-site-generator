@@ -11,6 +11,7 @@ dependencies = [
     "google-maps-routing>=0.10.0",
     "httpx>=0.28.1",
     "platformdirs>=4.9.6",
+    "polyline>=2.0.4",
     "python-frontmatter>=1.1.0",
     "pyyaml>=6.0.3",
 ]

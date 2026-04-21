@@ -14,8 +14,8 @@ def test_simple():
     assert len(journey.legs) == 1
 
     leg = journey.legs[0]
-    assert leg.source.name == "heathrow"
-    assert leg.source.date == date(2020, 1, 1)
+    assert leg.origin.name == "heathrow"
+    assert leg.origin.date == date(2020, 1, 1)
     assert leg.destination.name == "gatwick"
     assert leg.destination.date == date(2020, 1, 1)
     assert leg.mode_of_transport == ModeOfTransport.PLANE
@@ -32,8 +32,8 @@ def test_newline():
     assert len(journey.legs) == 1
 
     leg = journey.legs[0]
-    assert leg.source.name == "heathrow"
-    assert leg.source.date == date(2020, 1, 1)
+    assert leg.origin.name == "heathrow"
+    assert leg.origin.date == date(2020, 1, 1)
     assert leg.destination.name == "gatwick"
     assert leg.destination.date == date(2020, 1, 1)
     assert leg.mode_of_transport == ModeOfTransport.PLANE
@@ -50,8 +50,8 @@ def test_comments():
     assert len(journey.legs) == 1
 
     leg = journey.legs[0]
-    assert leg.source.name == "heathrow"
-    assert leg.source.date == date(2020, 1, 1)
+    assert leg.origin.name == "heathrow"
+    assert leg.origin.date == date(2020, 1, 1)
     assert leg.destination.name == "gatwick"
     assert leg.destination.date == date(2020, 1, 1)
     assert leg.mode_of_transport == ModeOfTransport.PLANE
@@ -70,8 +70,8 @@ def test_multiple_journies():
     assert len(journey.legs) == 1
 
     leg = journey.legs[0]
-    assert leg.source.name == "heathrow"
-    assert leg.source.date == date(2020, 1, 1)
+    assert leg.origin.name == "heathrow"
+    assert leg.origin.date == date(2020, 1, 1)
     assert leg.destination.name == "gatwick"
     assert leg.destination.date == date(2020, 1, 1)
     assert leg.mode_of_transport == ModeOfTransport.PLANE
@@ -80,8 +80,8 @@ def test_multiple_journies():
     assert len(journey.legs) == 1
 
     leg = journey.legs[0]
-    assert leg.source.name == "stansted"
-    assert leg.source.date == date(2020, 1, 2)
+    assert leg.origin.name == "stansted"
+    assert leg.origin.date == date(2020, 1, 2)
     assert leg.destination.name == "luton"
     assert leg.destination.date == date(2020, 1, 2)
     assert leg.mode_of_transport == ModeOfTransport.BICYCLE
@@ -100,15 +100,15 @@ def test_multiple_legs():
     assert len(journey.legs) == 2
 
     leg = journey.legs[0]
-    assert leg.source.name == "heathrow"
-    assert leg.source.date == date(2020, 1, 1)
+    assert leg.origin.name == "heathrow"
+    assert leg.origin.date == date(2020, 1, 1)
     assert leg.destination.name == "gatwick"
     assert leg.destination.date == date(2020, 1, 1)
     assert leg.mode_of_transport == ModeOfTransport.PLANE
 
     leg = journey.legs[1]
-    assert leg.source.name == "gatwick"
-    assert leg.source.date == date(2020, 1, 1)
+    assert leg.origin.name == "gatwick"
+    assert leg.origin.date == date(2020, 1, 1)
     assert leg.destination.name == "stansted"
     assert leg.destination.date == date(2020, 1, 2)
     assert leg.mode_of_transport == ModeOfTransport.TRAIN

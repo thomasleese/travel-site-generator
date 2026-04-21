@@ -29,12 +29,12 @@ class ModeOfTransport(StrEnum):
 
 @dataclass(frozen=True)
 class JourneyLeg:
-    source: Stop
+    origin: Stop
     destination: Stop
     mode_of_transport: ModeOfTransport
 
     def __str__(self):
-        return f"{self.source} to {self.destination} by {self.mode_of_transport}"
+        return f"{self.origin} to {self.destination} by {self.mode_of_transport}"
 
 
 @dataclass(frozen=True)
@@ -42,8 +42,8 @@ class Journey:
     legs: list[JourneyLeg]
 
     @property
-    def source(self) -> Stop:
-        return self.legs[0].source
+    def origin(self) -> Stop:
+        return self.legs[0].origin
 
     @property
     def destination(self) -> Stop:
@@ -133,8 +133,8 @@ def _parse(tokens: list[Token]) -> Journeys:
     is_first_to = True
 
     current_legs: list[JourneyLeg] = []
-    current_source_name: Optional[str] = None
-    current_source_date: Optional[datetime.date] = None
+    current_origin_name: Optional[str] = None
+    current_origin_date: Optional[datetime.date] = None
     current_destination_name: Optional[str] = None
     current_destination_date: Optional[datetime.date] = None
     current_mode_of_transport: Optional[ModeOfTransport] = None
@@ -142,35 +142,35 @@ def _parse(tokens: list[Token]) -> Journeys:
     def append_current_leg():
         nonlocal \
             current_legs, \
-            current_source_name, \
-            current_source_date, \
+            current_origin_name, \
+            current_origin_date, \
             current_destination_name, \
             current_destination_date
 
-        if current_source_name is None:
-            raise ValueError("No source stop is defined yet")
+        if current_origin_name is None:
+            raise ValueError("No origin stop is defined yet")
         elif current_destination_name is None:
             raise ValueError("No destination stop is defined yet")
-        elif current_source_date is None:
-            raise ValueError("No source date is defined yet")
+        elif current_origin_date is None:
+            raise ValueError("No origin date is defined yet")
         elif current_destination_date is None:
             raise ValueError("No destination date is defined yet")
         elif current_mode_of_transport is None:
             raise ValueError("No mode of transport is defined yet")
 
-        source = Stop(name=current_source_name, date=current_source_date)
+        origin = Stop(name=current_origin_name, date=current_origin_date)
         destination = Stop(name=current_destination_name, date=current_destination_date)
 
         current_legs.append(
             JourneyLeg(
-                source=source,
+                origin=origin,
                 destination=destination,
                 mode_of_transport=current_mode_of_transport,
             )
         )
 
-        current_source_name = current_destination_name
-        current_source_date = current_destination_date
+        current_origin_name = current_destination_name
+        current_origin_date = current_destination_date
         current_destination_name = None
 
     def append_current_journey():
@@ -178,8 +178,8 @@ def _parse(tokens: list[Token]) -> Journeys:
             journeys, \
             is_first_to, \
             current_legs, \
-            current_source_name, \
-            current_source_date, \
+            current_origin_name, \
+            current_origin_date, \
             current_destination_name, \
             current_destination_date, \
             current_mode_of_transport
@@ -190,19 +190,19 @@ def _parse(tokens: list[Token]) -> Journeys:
 
         is_first_to = True
         current_legs = []
-        current_source_name = None
-        current_source_date = None
+        current_origin_name = None
+        current_origin_date = None
         current_destination_name = None
         current_destination_date = None
         current_mode_of_transport = None
 
     def handle_date(token):
-        nonlocal current_action, current_source_date, current_destination_date
+        nonlocal current_action, current_origin_date, current_destination_date
 
         if current_action == CurrentAction.EXPECTING_DATE:
             date = datetime.date.fromisoformat(token.value)
-            if current_source_date is None:
-                current_source_date = date
+            if current_origin_date is None:
+                current_origin_date = date
 
             current_destination_date = date
             current_action = CurrentAction.EXPECTING_DESCRIPTOR
@@ -240,11 +240,11 @@ def _parse(tokens: list[Token]) -> Journeys:
                 raise ValueError(f"Unexpected keyword '{token.value}'")
 
     def handle_string(token):
-        nonlocal current_action, current_source_name, current_destination_name
+        nonlocal current_action, current_origin_name, current_destination_name
 
         match current_action:
             case CurrentAction.EXPECTING_SOURCE:
-                current_source_name = token.value
+                current_origin_name = token.value
                 current_action = CurrentAction.EXPECTING_DESCRIPTOR
             case CurrentAction.EXPECTING_DESTINATION:
                 current_destination_name = token.value

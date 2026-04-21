@@ -13,6 +13,7 @@ def main():
 
     parser.add_argument("--input", default=".", type=Path)
     parser.add_argument("--output", default="site", type=Path)
+    parser.add_argument("--gmaps-api-key")
 
     args = parser.parse_args()
 
@@ -23,7 +24,7 @@ def main():
 
     places = load_places(input_path)
     trips = load_trips(input_path)
-    routes = load_routes(places, trips)
+    routes = load_routes(places, trips, gmaps_api_key=args.gmaps_api_key)
 
     write_site(places, trips, routes, output_path)
 
