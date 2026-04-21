@@ -23,10 +23,10 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
 
     places = load_places(input_path)
-    trips = load_trips(input_path)
-    routes = load_routes(places, trips, gmaps_api_key=args.gmaps_api_key)
+    trips = load_trips(input_path, places)
+    routes = load_routes(trips, gmaps_api_key=args.gmaps_api_key)
 
-    write_site(places, trips, routes, output_path)
+    write_site(trips, routes, output_path)
 
 
 if __name__ == "__main__":

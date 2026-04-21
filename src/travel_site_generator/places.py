@@ -3,7 +3,9 @@ from itertools import batched
 from functools import cache
 import logging
 import pathlib
+from zoneinfo import ZoneInfo
 
+import tzfpy
 import yaml
 
 from .cache import SQLiteCache
@@ -27,6 +29,13 @@ class Place:
     name: str
     type: str
     country_code: str
+
+    def __str__(self):
+        return f"{self.name} ({self.type}, {self.country_code})"
+
+    def get_tzinfo(self) -> ZoneInfo:
+        tz = tzfpy.get_tz(self.longitude, self.latitude)
+        return ZoneInfo(tz)
 
 
 type Places = dict[str, Place]

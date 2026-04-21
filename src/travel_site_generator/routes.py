@@ -9,8 +9,7 @@ from google.maps import routing_v2
 import polyline
 
 from .cache import SQLiteCache
-from .journeys import JourneyLeg, ModeOfTransport
-from .places import Places
+from .journeys import JourneyLeg, ModeOfTransport, Stop
 from .trips import Trips
 
 
@@ -39,51 +38,60 @@ class Route:
         return Route(points=points)
 
 
-class RouteKey(NamedTuple):
-    origin_latitude: float
-    origin_longitude: float
-    origin_date: datetime.date
-    destination_latitude: float
-    destination_longitude: float
-    destination_date: datetime.date
-    mode_of_transport: ModeOfTransport
+class LegWrapper:
+    def __init__(self, leg: JourneyLeg):
+        self.leg = leg
+
+    @staticmethod
+    def _stop_to_point(stop: Stop) -> Point:
+        return Point(stop.place.latitude, stop.place.longitude)
+
+    @staticmethod
+    def _stop_to_lat_lng(stop: Stop) -> LatLng:
+        return LatLng(latitude=stop.place.latitude, longitude=stop.place.longitude)
+
+    @classmethod
+    def _stop_to_waypoint(cls, stop: Stop) -> routing_v2.Waypoint:
+        return routing_v2.Waypoint(
+            location=routing_v2.Location(lat_lng=cls._stop_to_lat_lng(stop))
+        )
+
+    def to_cache_values(self):
+        return (
+            self.leg.origin.place.latitude,
+            self.leg.origin.place.longitude,
+            self.leg.origin.date,
+            self.leg.destination.place.latitude,
+            self.leg.destination.place.longitude,
+            self.leg.destination.date,
+            self.leg.mode_of_transport,
+        )
 
     def to_fallback_route(self) -> Route:
         points = [
-            Point(self.origin_latitude, self.origin_longitude),
-            Point(self.destination_latitude, self.destination_longitude),
+            self._stop_to_point(self.leg.origin),
+            self._stop_to_point(self.leg.destination),
         ]
         return Route(points=points)
 
     def to_origin(self) -> routing_v2.Waypoint:
-        return routing_v2.Waypoint(
-            location=routing_v2.Location(
-                lat_lng=LatLng(
-                    latitude=self.origin_latitude,
-                    longitude=self.origin_longitude,
-                )
-            )
-        )
+        return self._stop_to_waypoint(self.leg.origin)
 
     def to_destination(self) -> routing_v2.Waypoint:
-        return routing_v2.Waypoint(
-            location=routing_v2.Location(
-                lat_lng=LatLng(
-                    latitude=self.destination_latitude,
-                    longitude=self.destination_longitude,
-                )
-            )
-        )
+        return self._stop_to_waypoint(self.leg.destination)
 
     def to_departure_time(self) -> Optional[datetime.datetime]:
-        if self.mode_of_transport in [ModeOfTransport.CAR, ModeOfTransport.FOOT]:
+        if self.leg.mode_of_transport in [ModeOfTransport.CAR, ModeOfTransport.FOOT]:
             return None
 
-        origin_date = (
-            datetime.date.today()
-        )  # FIXME: Pick a date with the same day as the journey
-        origin_time = datetime.time(10)  # FIXME: This is arbitrary
-        return datetime.datetime.combine(origin_date, origin_time)
+        tzinfo = self.leg.origin.place.get_tzinfo()
+
+        # FIXME: Pick a date with the same day as the journey
+        # FIXME: Don't pick an arbitrary hour
+
+        return datetime.datetime.now(datetime.timezone.utc).replace(
+            hour=10, minute=0, second=0, tzinfo=tzinfo
+        ) - datetime.timedelta(days=1)
 
     def to_arrival_time(self) -> Optional[datetime.datetime]:
         return None
@@ -91,7 +99,7 @@ class RouteKey(NamedTuple):
     def to_travel_mode_and_transit_preferences(
         self,
     ) -> tuple[routing_v2.RouteTravelMode, Optional[routing_v2.TransitPreferences]]:
-        match self.mode_of_transport:
+        match self.leg.mode_of_transport:
             case ModeOfTransport.BICYCLE:
                 return routing_v2.RouteTravelMode.BICYCLE, None
             case ModeOfTransport.BUS:
@@ -144,21 +152,6 @@ class RouteKey(NamedTuple):
                     f"Unsupported mode of transport: {self.mode_of_transport}"
                 )
 
-    @classmethod
-    def from_journey_leg(cls, leg: JourneyLeg, places: Places) -> "RouteKey":
-        origin_place = places[leg.origin.name]
-        destination_place = places[leg.destination.name]
-
-        return cls(
-            origin_latitude=origin_place.latitude,
-            origin_longitude=origin_place.longitude,
-            origin_date=leg.origin.date,
-            destination_latitude=destination_place.latitude,
-            destination_longitude=destination_place.longitude,
-            destination_date=leg.destination.date,
-            mode_of_transport=leg.mode_of_transport,
-        )
-
 
 type Routes = dict[JourneyLeg, Route]
 
@@ -181,28 +174,56 @@ class Cache(SQLiteCache):
             )
         """)
 
-    def __contains__(self, key: RouteKey) -> bool:
-        return (
-            self.cursor.execute(
-                "SELECT 1 FROM routes WHERE origin_latitude = ? AND origin_longitude = ? AND origin_date = ? AND destination_latitude = ? AND destination_longitude = ? AND destination_date = ? AND mode_of_transport = ?",
-                tuple(key),
-            ).fetchone()
-            is not None
-        )
+    def __contains__(self, leg: JourneyLeg) -> bool:
+        values = LegWrapper(leg).to_cache_values()
 
-    def __getitem__(self, key: RouteKey) -> Route:
-        result = self.cursor.execute(
-            "SELECT encoded_polyline FROM routes WHERE origin_latitude = ? AND origin_longitude = ? AND origin_date = ? AND destination_latitude = ? AND destination_longitude = ? AND destination_date = ? AND mode_of_transport = ?",
-            tuple(key),
+        row = self.cursor.execute(
+            """
+            SELECT 1 FROM routes
+            WHERE origin_latitude = ?
+              AND origin_longitude = ?
+              AND origin_date = ?
+              AND destination_latitude = ?
+              AND destination_longitude = ?
+              AND destination_date = ?
+              AND mode_of_transport = ?
+        """,
+            values,
         ).fetchone()
 
-        if result is None:
-            raise KeyError(f"Route not found: {key}")
+        return row is not None
 
-        return Route.from_encoded_polyline(result[0])
+    def __getitem__(self, leg: JourneyLeg) -> Route:
+        values = LegWrapper(leg).to_cache_values()
 
-    def __setitem__(self, key: RouteKey, route: Route):
-        values = tuple(key) + (route.to_encoded_polyline(),)
+        row = self.cursor.execute(
+            """
+            SELECT encoded_polyline
+            FROM routes
+            WHERE origin_latitude = ?
+              AND origin_longitude = ?
+              AND origin_date = ?
+              AND destination_latitude = ?
+              AND destination_longitude = ?
+              AND destination_date = ?
+              AND mode_of_transport = ?
+        """,
+            values,
+        ).fetchone()
+
+        if row is None:
+            raise KeyError(f"Route not found: {leg}")
+
+        return Route.from_encoded_polyline(row[0])
+
+    def get(self, leg: JourneyLeg) -> Optional[Route]:
+        try:
+            return self[leg]
+        except KeyError:
+            return None
+
+    def __setitem__(self, leg: JourneyLeg, route: Route):
+        values = LegWrapper(leg).to_cache_values() + (route.to_encoded_polyline(),)
         self.cursor.execute(
             "INSERT INTO routes VALUES (?, ?, ?, ?, ?, ?, ?, ?)", values
         )
@@ -214,13 +235,15 @@ class RouteFetcher:
         client_options = ClientOptions(api_key=gmaps_api_key)
         self.client = routing_v2.RoutesClient(client_options=client_options)
 
-    def fetch(self, route_key: RouteKey) -> Route:
-        origin = route_key.to_origin()
-        destination = route_key.to_destination()
-        departure_time = route_key.to_departure_time()
-        arrival_time = route_key.to_arrival_time()
+    def fetch(self, leg: JourneyLeg) -> Route:
+        leg_wrapper = LegWrapper(leg)
+
+        origin = leg_wrapper.to_origin()
+        destination = leg_wrapper.to_destination()
+        departure_time = leg_wrapper.to_departure_time()
+        arrival_time = leg_wrapper.to_arrival_time()
         travel_mode, transit_preferences = (
-            route_key.to_travel_mode_and_transit_preferences()
+            leg_wrapper.to_travel_mode_and_transit_preferences()
         )
 
         request = routing_v2.ComputeRoutesRequest(
@@ -241,13 +264,13 @@ class RouteFetcher:
         routes = response.routes
 
         if not routes:
-            raise ValueError(f"No routes found for {route_key}")
+            raise ValueError(f"No routes found for {leg}")
 
         encoded_polyline = routes[0].polyline.encoded_polyline
         return Route.from_encoded_polyline(encoded_polyline)
 
 
-def load(places: Places, trips: Trips, gmaps_api_key: str) -> Routes:
+def load(trips: Trips, gmaps_api_key: str) -> Routes:
     logger.info("Loading routes")
 
     route_fetcher = RouteFetcher(gmaps_api_key)
@@ -261,30 +284,21 @@ def load(places: Places, trips: Trips, gmaps_api_key: str) -> Routes:
                 if leg in routes:
                     continue
 
-                route_key = RouteKey.from_journey_leg(leg, places)
-
-                if route_key.mode_of_transport == ModeOfTransport.PLANE:
-                    points = [
-                        Point(route_key.origin_latitude, route_key.origin_longitude),
-                        Point(
-                            route_key.destination_latitude,
-                            route_key.destination_longitude,
-                        ),
-                    ]
-                    routes[leg] = Route(points=points)
+                if leg.mode_of_transport == ModeOfTransport.PLANE:
+                    routes[leg] = LegWrapper(leg).to_fallback_route()
                     continue
 
-                if route_key in cache:
-                    routes[leg] = cache[route_key]
+                if cached_route := cache.get(leg):
+                    routes[leg] = cached_route
                     continue
 
                 logger.info("Fetching route for %s", leg)
 
                 try:
-                    route = cache[route_key] = route_fetcher.fetch(route_key)
+                    route = cache[leg] = route_fetcher.fetch(leg)
                 except ValueError:
                     logger.warning("Failed to fetch route for %s", leg)
-                    route = route_key.to_fallback_route()
+                    route = LegWrapper(leg).to_fallback_route()
 
                 routes[leg] = route
 

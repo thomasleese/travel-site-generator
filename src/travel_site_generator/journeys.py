@@ -4,14 +4,16 @@ from enum import Enum, StrEnum
 import re
 from typing import NamedTuple, Optional
 
+from .places import Place, Places
+
 
 @dataclass(frozen=True)
 class Stop:
-    name: str
+    place: Place
     date: datetime.date
 
     def __str__(self):
-        return f"{self.name} ({self.date})"
+        return f"{self.place} ({self.date})"
 
 
 class ModeOfTransport(StrEnum):
@@ -124,7 +126,7 @@ class CurrentAction(Enum):
     EXPECTING_SOURCE = 4
 
 
-def _parse(tokens: list[Token]) -> Journeys:
+def _parse(tokens: list[Token], places: Places) -> Journeys:
     journeys = []
 
     current_action = CurrentAction.EXPECTING_DESCRIPTOR
@@ -133,23 +135,23 @@ def _parse(tokens: list[Token]) -> Journeys:
     is_first_to = True
 
     current_legs: list[JourneyLeg] = []
-    current_origin_name: Optional[str] = None
+    current_origin_place: Optional[Place] = None
     current_origin_date: Optional[datetime.date] = None
-    current_destination_name: Optional[str] = None
+    current_destination_place: Optional[Place] = None
     current_destination_date: Optional[datetime.date] = None
     current_mode_of_transport: Optional[ModeOfTransport] = None
 
     def append_current_leg():
         nonlocal \
             current_legs, \
-            current_origin_name, \
+            current_origin_place, \
             current_origin_date, \
-            current_destination_name, \
+            current_destination_place, \
             current_destination_date
 
-        if current_origin_name is None:
+        if current_origin_place is None:
             raise ValueError("No origin stop is defined yet")
-        elif current_destination_name is None:
+        elif current_destination_place is None:
             raise ValueError("No destination stop is defined yet")
         elif current_origin_date is None:
             raise ValueError("No origin date is defined yet")
@@ -158,8 +160,10 @@ def _parse(tokens: list[Token]) -> Journeys:
         elif current_mode_of_transport is None:
             raise ValueError("No mode of transport is defined yet")
 
-        origin = Stop(name=current_origin_name, date=current_origin_date)
-        destination = Stop(name=current_destination_name, date=current_destination_date)
+        origin = Stop(place=current_origin_place, date=current_origin_date)
+        destination = Stop(
+            place=current_destination_place, date=current_destination_date
+        )
 
         current_legs.append(
             JourneyLeg(
@@ -169,18 +173,18 @@ def _parse(tokens: list[Token]) -> Journeys:
             )
         )
 
-        current_origin_name = current_destination_name
+        current_origin_place = current_destination_place
         current_origin_date = current_destination_date
-        current_destination_name = None
+        current_destination_place = None
 
     def append_current_journey():
         nonlocal \
             journeys, \
             is_first_to, \
             current_legs, \
-            current_origin_name, \
+            current_origin_place, \
             current_origin_date, \
-            current_destination_name, \
+            current_destination_place, \
             current_destination_date, \
             current_mode_of_transport
 
@@ -190,9 +194,9 @@ def _parse(tokens: list[Token]) -> Journeys:
 
         is_first_to = True
         current_legs = []
-        current_origin_name = None
+        current_origin_place = None
         current_origin_date = None
-        current_destination_name = None
+        current_destination_place = None
         current_destination_date = None
         current_mode_of_transport = None
 
@@ -240,14 +244,14 @@ def _parse(tokens: list[Token]) -> Journeys:
                 raise ValueError(f"Unexpected keyword '{token.value}'")
 
     def handle_string(token):
-        nonlocal current_action, current_origin_name, current_destination_name
+        nonlocal current_action, current_origin_place, current_destination_place
 
         match current_action:
             case CurrentAction.EXPECTING_SOURCE:
-                current_origin_name = token.value
+                current_origin_place = places[token.value]
                 current_action = CurrentAction.EXPECTING_DESCRIPTOR
             case CurrentAction.EXPECTING_DESTINATION:
-                current_destination_name = token.value
+                current_destination_place = places[token.value]
                 current_action = CurrentAction.EXPECTING_DESCRIPTOR
 
     for token in tokens:
@@ -264,5 +268,5 @@ def _parse(tokens: list[Token]) -> Journeys:
     return journeys
 
 
-def load(string: str) -> Journeys:
-    return _parse(_tokenize(string))
+def load(string: str, places: Places) -> Journeys:
+    return _parse(_tokenize(string), places)

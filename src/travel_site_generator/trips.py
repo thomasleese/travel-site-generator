@@ -8,6 +8,7 @@ import frontmatter
 from frontmatter.default_handlers import BaseHandler
 
 from .journeys import load as load_journeys, Journeys
+from .places import Places
 
 
 logger = logging.getLogger(__name__)
@@ -26,16 +27,20 @@ class JourneysHandler(BaseHandler):
     FM_BOUNDARY = re.compile(r"^={3,}\s*$", re.MULTILINE)
     START_DELIMITER = END_DELIMITER = "==="
 
+    def __init__(self, places: Places, *args: object, **kwargs: object):
+        super().__init__(*args, **kwargs)
+        self.places = places
+
     def load(self, fm: str, **kwargs: object) -> dict[str, Journeys]:
-        return {"journeys": load_journeys(fm)}
+        return {"journeys": load_journeys(fm, self.places)}
 
 
-def _load(fd: str | io.IOBase | pathlib.Path) -> Trip:
-    post = frontmatter.load(fd, handler=JourneysHandler())
+def _load(fd: str | io.IOBase | pathlib.Path, places: Places) -> Trip:
+    post = frontmatter.load(fd, handler=JourneysHandler(places))
     return Trip(journeys=post["journeys"], description=post.content)
 
 
-def load(path: pathlib.Path) -> Trips:
+def load(path: pathlib.Path, places: Places) -> Trips:
     logger.info("Loading trips from %s", path)
 
     trips = []
@@ -43,6 +48,6 @@ def load(path: pathlib.Path) -> Trips:
     for trip_path in sorted((path / "trips").glob("*/*.md")):
         name = str(trip_path)[len(str(path)) + 7 :]
         logger.info("Loading %s", name)
-        trips.append(_load(trip_path))
+        trips.append(_load(trip_path, places))
 
     return trips
