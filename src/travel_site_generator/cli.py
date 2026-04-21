@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .places import load as load_places
 from .trips import load as load_trips
+from .routes import load as load_routes
 from .writer import write_site
 
 
@@ -22,8 +23,9 @@ def main():
 
     places = load_places(input_path)
     trips = load_trips(input_path)
+    routes = load_routes(places, trips)
 
-    write_site(trips, places, output_path)
+    write_site(places, trips, routes, output_path)
 
 
 if __name__ == "__main__":

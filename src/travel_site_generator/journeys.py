@@ -10,6 +10,9 @@ class Stop:
     name: str
     date: datetime.date
 
+    def __str__(self):
+        return f"{self.name} ({self.date})"
+
 
 class ModeOfTransport(StrEnum):
     BICYCLE = "bicycle"
@@ -29,6 +32,9 @@ class JourneyLeg:
     source: Stop
     destination: Stop
     mode_of_transport: ModeOfTransport
+
+    def __str__(self):
+        return f"{self.source} to {self.destination} by {self.mode_of_transport}"
 
 
 @dataclass(frozen=True)

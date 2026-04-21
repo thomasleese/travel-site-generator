@@ -3,13 +3,14 @@ import logging
 from pathlib import Path
 
 from .places import Places
+from .routes import Routes
 from .trips import Trips
 
 
 logger = logging.getLogger(__name__)
 
 
-def write_geojson(trips: Trips, places: Places, path: Path):
+def write_geojson(trips: Trips, routes: Routes, path: Path):
     logger.info("Saving GeoJSON data to %s", path)
 
     features = [
@@ -18,9 +19,9 @@ def write_geojson(trips: Trips, places: Places, path: Path):
             "properties": {},
             "geometry": {
                 "coordinates": [
-                    [places[slug].longitude, places[slug].latitude]
+                    [point.longitude, point.latitude]
                     for leg in journey.legs
-                    for slug in [leg.source.name, leg.destination.name]
+                    for point in routes[leg].points
                 ],
                 "type": "LineString",
             },
@@ -35,9 +36,9 @@ def write_geojson(trips: Trips, places: Places, path: Path):
         file.write(json.dumps(data))
 
 
-def write_site(trips: Trips, places: Places, path: Path):
+def write_site(places: Places, trips: Trips, routes: Routes, path: Path):
     logger.info("Saving to %s", path)
 
     path.mkdir(parents=True, exist_ok=True)
 
-    write_geojson(trips, places, path / "data.json")
+    write_geojson(trips, routes, path / "data.json")
