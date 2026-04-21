@@ -4,17 +4,17 @@ import logging
 import platformdirs
 import sqlite3
 
-import requests
-
 from .models import Place
+from .osm import Nominatim
 
 
 logger = logging.getLogger(__name__)
+nominatim = Nominatim()
 
 
 class Store:
     def __init__(self):
-        path = platformdirs.user_cache_path("travel-journal-generator") / "places.db"
+        path = platformdirs.user_cache_path("travel-site-generator") / "places.db"
         path.parent.mkdir(parents=True, exist_ok=True)
 
         logger.info("Loading places from %s", path)
@@ -64,13 +64,7 @@ class Store:
             self._fetch_and_insert(batch)
 
     def _fetch_and_insert(self, osm_ids):
-        url = "https://nominatim.openstreetmap.org/lookup"
-        params = {"osm_ids": ", ".join(osm_ids), "format": "jsonv2"}
-        headers = {"User-Agent": "travel-journal-generator", "Accept-Language": "en"}
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-
-        for data in response.json():
+        for data in nominatim.lookup(osm_ids=osm_ids):
             self._insert(data)
 
     def _insert(self, data):
@@ -82,6 +76,8 @@ class Store:
         country_code = data["address"]["country_code"]
 
         row = (osm_id, latitude, longitude, name, type, country_code)
+
+        print(row)
 
         self.cursor.execute("INSERT INTO places VALUES (?, ?, ?, ?, ?, ?)", row)
         self.connection.commit()

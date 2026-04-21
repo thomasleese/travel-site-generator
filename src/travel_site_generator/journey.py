@@ -32,3 +32,11 @@ class JourneyLeg:
 @dataclass(frozen=True)
 class Journey:
     legs: list[JourneyLeg]
+
+    @property
+    def source(self) -> Stop:
+        return self.legs[0].source
+
+    @property
+    def destination(self) -> Stop:
+        return self.legs[-1].destination
