@@ -36,9 +36,11 @@ def _load(fd: str | io.IOBase | pathlib.Path) -> Trip:
 
 
 def load(path: pathlib.Path) -> Trips:
+    logger.info("Loading trips from %s", path)
+
     trips = []
 
-    for trip_path in (path / "trips").glob("*/*.md"):
+    for trip_path in sorted((path / "trips").glob("*/*.md")):
         name = str(trip_path)[len(str(path)) + 7 :]
         logger.info("Loading %s", name)
         trips.append(_load(trip_path))

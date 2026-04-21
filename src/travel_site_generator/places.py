@@ -2,11 +2,12 @@ from dataclasses import dataclass
 from itertools import batched
 from functools import cache
 import logging
-import platformdirs
-import sqlite3
+import pathlib
 
+import yaml
+
+from .cache import SQLiteCache
 from .osm import Nominatim
-from .trips import Trips
 
 
 logger = logging.getLogger(__name__)
@@ -28,20 +29,14 @@ class Place:
     country_code: str
 
 
-class Store:
+type Places = dict[str, Place]
+
+
+class Cache(SQLiteCache):
     def __init__(self):
-        path = platformdirs.user_cache_path("travel-site-generator") / "places.db"
-        path.parent.mkdir(parents=True, exist_ok=True)
+        super().__init__(name="places")
 
-        logger.info("Loading places from %s", path)
-
-        self.connection = sqlite3.connect(path)
-        self.cursor = self.connection.cursor()
-
-        self._create_table_if_not_exists()
-
-    def _create_table_if_not_exists(self):
-        logger.debug("Creating table if not exists")
+    def set_up_tables(self):
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS places(
                 osm_id TEXT PRIMARY KEY NOT NULL,
@@ -53,15 +48,7 @@ class Store:
             )
         """)
 
-    def populate_from(self, *, trips: Trips):
-        osm_ids = {
-            osm_id
-            for trip in trips
-            for journey in trip.journeys
-            for leg in journey.legs
-            for osm_id in [leg.source.name, leg.destination.name]
-        }
-
+    def populate_from(self, *, osm_ids: set[str]):
         existing_osm_ids = {
             row[0]
             for row in self.cursor.execute(
@@ -110,3 +97,16 @@ class Store:
             type=type,
             country_code=country_code,
         )
+
+
+def load(path: pathlib.Path) -> Places:
+    places_path = path / "places.yaml"
+
+    logger.info("Loading places from %s", places_path)
+
+    with open(places_path) as file:
+        data = yaml.safe_load(file.read())
+
+    cache = Cache()
+    cache.populate_from(osm_ids=set(data.values()))
+    return {slug: cache[osm_id] for slug, osm_id in data.items()}

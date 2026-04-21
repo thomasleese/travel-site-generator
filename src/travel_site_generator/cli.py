@@ -2,7 +2,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from .places import Store as PlaceStore
+from .places import load as load_places
 from .trips import load as load_trips
 from .writer import write_site
 
@@ -20,10 +20,9 @@ def main():
 
     logging.basicConfig(level=logging.DEBUG)
 
-    places = PlaceStore()
-
+    places = load_places(input_path)
     trips = load_trips(input_path)
-    places.populate_from(trips=trips)
+
     write_site(trips, places, output_path)
 
 

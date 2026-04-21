@@ -5,8 +5,20 @@ structure:
 
 ```
 /
+/places.yaml
 /trips
 ```
+
+## Places
+
+All your places referenced in trips must be in a `places.yaml` file.
+
+```yaml
+---
+Luton-Airport: W110273499
+Paris-CDG: W294032205
+```
+
 
 ## Trips
 
@@ -17,15 +29,15 @@ The front matter block looks like this:
 
 ```
 ===
-From W110273499 on 2018-07-03 # Luton Airport
-To W294032205 by plane # Paris CDG Airport
+From Luton-Airport on 2018-07-03
+To Paris-CDG by plane
 
-From N65331500 on 2018-07-06 # Paris-Montparnasse
-To N6132514816 by train # Toulouse-Matabiau
-To R116558 # Rodez
+From Paris-Montparnasse on 2018-07-06
+To Toulouse-Matabiau by train
+To Rodez-Gare
 
-From R76535 on 2018-07-11 # Camarès
-To W368475266 by car # Toulouse-Blagnac
-To W110273499 by train # Luton Airport
+From Camares on 2018-07-11
+To Toulouse-Blagnac by car
+To Luton-Airport by train
 ===
 ```
