@@ -1,9 +1,48 @@
 import datetime
-from enum import Enum
+from dataclasses import dataclass
+from enum import Enum, StrEnum
 import re
 from typing import NamedTuple, Optional
 
-from .journey import Journey, JourneyLeg, ModeOfTransport, Stop
+
+@dataclass(frozen=True)
+class Stop:
+    name: str
+    date: datetime.date
+
+
+class ModeOfTransport(StrEnum):
+    BICYCLE = "bicycle"
+    BUS = "bus"
+    CAR = "car"
+    FERRY = "ferry"
+    FOOT = "foot"
+    METRO = "metro"
+    MOTORCYCLE = "motorcycle"
+    PLANE = "plane"
+    TRAIN = "train"
+    TRAM = "tram"
+
+
+@dataclass(frozen=True)
+class JourneyLeg:
+    source: Stop
+    destination: Stop
+    mode_of_transport: ModeOfTransport
+
+
+@dataclass(frozen=True)
+class Journey:
+    legs: list[JourneyLeg]
+
+    @property
+    def source(self) -> Stop:
+        return self.legs[0].source
+
+    @property
+    def destination(self) -> Stop:
+        return self.legs[-1].destination
+
 
 type Journeys = list[Journey]
 
@@ -29,6 +68,7 @@ class Token(NamedTuple):
 KEYWORDS = [descriptor.value for descriptor in Descriptor] + [
     mode.value for mode in ModeOfTransport
 ]
+
 DATE_PATTERN = r"\d{4}-\d{2}-\d{2}"
 
 
@@ -218,5 +258,5 @@ def _parse(tokens: list[Token]) -> Journeys:
     return journeys
 
 
-def loads(s: str) -> Journeys:
-    return _parse(_tokenize(s))
+def load(string: str) -> Journeys:
+    return _parse(_tokenize(string))

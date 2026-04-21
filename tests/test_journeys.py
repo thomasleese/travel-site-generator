@@ -1,13 +1,12 @@
 from datetime import date
 
-from travel_site_generator import journeys_parser
-from travel_site_generator.journey import ModeOfTransport
+from travel_site_generator.journeys import load as load_journeys, ModeOfTransport
 
 
 def test_simple():
     string = "From heathrow on 2020-01-01 to gatwick by plane"
 
-    journeys = journeys_parser.loads(string)
+    journeys = load_journeys(string)
 
     assert len(journeys) == 1
 
@@ -25,7 +24,7 @@ def test_simple():
 def test_newline():
     string = "From heathrow on 2020-01-01\nTo gatwick by plane"
 
-    journeys = journeys_parser.loads(string)
+    journeys = load_journeys(string)
 
     assert len(journeys) == 1
 
@@ -43,7 +42,7 @@ def test_newline():
 def test_comments():
     string = "From heathrow on 2020-01-01 # a comment\nTo gatwick by plane"
 
-    journeys = journeys_parser.loads(string)
+    journeys = load_journeys(string)
 
     assert len(journeys) == 1
 
@@ -64,7 +63,7 @@ def test_multiple_journies():
     From stansted to luton on 2020-01-02 by bicycle
     """
 
-    journeys = journeys_parser.loads(string)
+    journeys = load_journeys(string)
     assert len(journeys) == 2
 
     journey = journeys[0]
@@ -94,7 +93,7 @@ def test_multiple_legs():
     To stansted on 2020-01-02 by train
     """
 
-    journeys = journeys_parser.loads(string)
+    journeys = load_journeys(string)
     assert len(journeys) == 1
 
     journey = journeys[0]

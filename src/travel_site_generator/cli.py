@@ -2,8 +2,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from .loader import load_journal
 from .places import Store as PlaceStore
+from .trips import load as load_trips
 from .writer import write_site
 
 
@@ -22,9 +22,9 @@ def main():
 
     places = PlaceStore()
 
-    journal = load_journal(input_path)
-    places.populate_from_journal(journal)
-    write_site(journal, places, output_path)
+    trips = load_trips(input_path)
+    places.populate_from(trips=trips)
+    write_site(trips, places, output_path)
 
 
 if __name__ == "__main__":

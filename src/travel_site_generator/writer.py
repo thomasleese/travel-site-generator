@@ -2,14 +2,14 @@ import json
 import logging
 from pathlib import Path
 
-from .models import Journal
 from .places import Store as PlaceStore
+from .trips import Trips
 
 
 logger = logging.getLogger(__name__)
 
 
-def write_geojson(journal: Journal, places: PlaceStore, path: Path):
+def write_geojson(trips: Trips, places: PlaceStore, path: Path):
     logger.info("Saving GeoJSON data to %s", path)
 
     features = [
@@ -25,7 +25,7 @@ def write_geojson(journal: Journal, places: PlaceStore, path: Path):
                 "type": "LineString",
             },
         }
-        for trip in journal.trips
+        for trip in trips
         for journey in trip.journeys
     ]
 
@@ -35,9 +35,9 @@ def write_geojson(journal: Journal, places: PlaceStore, path: Path):
         file.write(json.dumps(data))
 
 
-def write_site(journal: Journal, places: PlaceStore, path: Path):
+def write_site(trips: Trips, places: PlaceStore, path: Path):
     logger.info("Saving to %s", path)
 
     path.mkdir(parents=True, exist_ok=True)
 
-    write_geojson(journal, places, path / "data.json")
+    write_geojson(trips, places, path / "data.json")

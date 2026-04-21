@@ -1,15 +1,31 @@
+from dataclasses import dataclass
 from itertools import batched
 from functools import cache
 import logging
 import platformdirs
 import sqlite3
 
-from .models import Place
 from .osm import Nominatim
+from .trips import Trips
 
 
 logger = logging.getLogger(__name__)
 nominatim = Nominatim()
+
+
+type OpenStreetMapIdentifier = str
+
+
+@dataclass(frozen=True)
+class Place:
+    osm_id: str
+
+    latitude: float
+    longitude: float
+
+    name: str
+    type: str
+    country_code: str
 
 
 class Store:
@@ -37,10 +53,10 @@ class Store:
             )
         """)
 
-    def populate_from_journal(self, journal):
+    def populate_from(self, *, trips: Trips):
         osm_ids = {
             osm_id
-            for trip in journal.trips
+            for trip in trips
             for journey in trip.journeys
             for leg in journey.legs
             for osm_id in [leg.source.name, leg.destination.name]
