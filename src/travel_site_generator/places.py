@@ -42,7 +42,8 @@ class Store:
             osm_id
             for trip in journal.trips
             for journey in trip.journeys
-            for osm_id in journey.stops
+            for leg in journey.legs
+            for osm_id in [leg.source.name, leg.destination.name]
         }
 
         existing_osm_ids = {

@@ -19,7 +19,8 @@ def write_geojson(journal: Journal, places: PlaceStore, path: Path):
             "geometry": {
                 "coordinates": [
                     [places[osm_id].longitude, places[osm_id].latitude]
-                    for osm_id in journey.stops
+                    for leg in journey.legs
+                    for osm_id in [leg.source.name, leg.destination.name]
                 ],
                 "type": "LineString",
             },

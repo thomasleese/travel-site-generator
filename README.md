@@ -4,9 +4,13 @@ A static site generator for creating travel journals.
 
 ## Usage
 
-```shell
-$ uv run travel-site-generator
-```
+1. Set up a [site structure](docs/structure.md).
+
+2. Run the generator:
+
+   ```shell
+   $ uv run travel-site-generator
+   ```
 
 ## Development
 

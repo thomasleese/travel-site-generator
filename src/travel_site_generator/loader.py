@@ -1,20 +1,11 @@
 import logging
 from pathlib import Path
-import yaml
 
-from .models import Journal, Trip
+from .models import Journal
+from . import trip_parser
 
 
 logger = logging.getLogger(__name__)
-
-
-def load_trip(path: Path) -> Trip:
-    logger.info("Loading trip from %s", path.name)
-
-    with path.open() as file:
-        data = yaml.safe_load(file)
-
-    return Trip.model_validate(data)
 
 
 def load_journal(path: Path) -> Journal:
@@ -22,7 +13,8 @@ def load_journal(path: Path) -> Journal:
 
     trips = []
 
-    for trip_path in (path / "trips").glob("*.yaml"):
-        trips.append(load_trip(trip_path))
+    for trip_path in (path / "trips").glob("*.md"):
+        logger.info("Loading trip from %s", trip_path.name)
+        trips.append(trip_parser.load(trip_path))
 
     return Journal(trips=trips)

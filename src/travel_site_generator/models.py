@@ -1,19 +1,9 @@
-from datetime import date
-
 from pydantic import BaseModel, Field
+
+from .trip import Trip
 
 
 type OpenStreetMapIdentifier = str
-
-
-class Journey(BaseModel):
-    dates: list[date] = Field(frozen=True)
-    stops: list[OpenStreetMapIdentifier] = Field(frozen=True)
-
-
-class Trip(BaseModel):
-    name: str = Field(frozen=True)
-    journeys: list[Journey] = Field(frozen=True)
 
 
 class Journal(BaseModel):
