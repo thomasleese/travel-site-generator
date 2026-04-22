@@ -67,7 +67,7 @@ class Timeline:
 
     @staticmethod
     def from_trips(trips: Trips) -> Timeline:
-        return Timeline(trips=[TimelineTrip.from_trip(trip) for trip in trips])
+        return Timeline(trips=list(reversed([TimelineTrip.from_trip(trip) for trip in trips])))
 
 
 def load(trips: Trips) -> Timeline:
