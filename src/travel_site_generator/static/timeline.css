@@ -1,0 +1,50 @@
+.timeline {
+    padding: 1rem;
+}
+
+.timeline-trip {
+    margin: 1rem 0 2rem 0;
+}
+
+.timeline-journey {
+    margin: 1rem 0 1rem 12px;
+    border-left: 8px solid #000;
+}
+
+.timeline-place {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+}
+
+.timeline-place-content {
+    margin-left: -12px;
+}
+
+.timeline-place:before {
+    width: 32px;
+    height: 32px;
+    border-radius: 32px;
+    display: block;
+    background: #fff;
+    border: 6px solid #000;
+    line-height: 22px;
+    content: " ";
+    position: relative;
+    left: -20px;
+}
+
+.timeline-travel {
+    margin: 12px 0 12px 24px;
+}
+
+.timeline-travel-content {
+    display: flex;
+    align-items: center;
+}
+
+.timeline-travel-content img {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}

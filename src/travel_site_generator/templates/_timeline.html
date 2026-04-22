@@ -1,11 +1,26 @@
-{% for trip in timeline.trips %}
-  {{ trip.description | markdown }}
+<aside class="timeline">
+  {% for trip in timeline.trips %}
+    <div class="timeline-trip">
+      {{ trip.description | markdown }}
 
-  {% for journey in trip.journeys %}
-    <ol>
-      {% for stop in journey.stops %}
-        <li>{{ stop.date }} — {{ stop.place }}</li>
+      {% for journey in trip.journeys %}
+        <ol class="timeline-journey">
+          {% for entry in journey.entries %}
+            {% if entry.place %}
+              <li class="timeline-place">
+                <span class="timeline-place-content">{{ entry.place.name }}</span>
+              </li>
+            {% else %}
+              <li class="timeline-travel">
+                <span class="timeline-travel-content">
+                  <img src="static/modes/{{ entry.mode_of_transport }}.svg" alt="By {{ entry.mode_of_transport }}" />
+                  {{ entry.origin_date | to_date(entry.destination_date) }}
+                </span>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ol>
       {% endfor %}
-    </ol>
+    </div>
   {% endfor %}
-{% endfor %}
+</aside>
