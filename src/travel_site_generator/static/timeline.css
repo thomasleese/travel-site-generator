@@ -18,24 +18,24 @@
 }
 
 .timeline-place-content {
-    margin-left: -12px;
+    margin-left: -10px;
 }
 
 .timeline-place:before {
-    width: 32px;
-    height: 32px;
-    border-radius: 32px;
+    width: 30px;
+    height: 30px;
+    border-radius: 30px;
     display: block;
     background: #fff;
     border: 6px solid #000;
-    line-height: 22px;
+    line-height: 15px;
     content: " ";
     position: relative;
-    left: -20px;
+    left: -19px;
 }
 
 .timeline-travel {
-    margin: 12px 0 12px 24px;
+    margin: 12px 0 12px 18px;
 }
 
 .timeline-travel-content {
