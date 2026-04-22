@@ -411,6 +411,15 @@ wheels = [
 ]
 
 [[package]]
+name = "mistune"
+version = "3.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/55/d01f0c4b45ade6536c51170b9043db8b2ec6ddf4a35c7ea3f5f559ac935b/mistune-3.2.0.tar.gz", hash = "sha256:708487c8a8cdd99c9d90eb3ed4c3ed961246ff78ac82f03418f5183ab70e398a", size = 95467, upload-time = "2025-12-23T11:36:34.994Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9b/f7/4a5e785ec9fbd65146a27b6b70b6cdc161a66f2024e4b04ac06a67f5578b/mistune-3.2.0-py3-none-any.whl", hash = "sha256:febdc629a3c78616b94393c6580551e0e34cc289987ec6c35ed3f4be42d0eee1", size = 53598, upload-time = "2025-12-23T11:36:33.211Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "26.1"
 source = { registry = "https://pypi.org/simple" }
@@ -629,6 +638,7 @@ dependencies = [
     { name = "google-maps-routing" },
     { name = "httpx" },
     { name = "jinja2" },
+    { name = "mistune" },
     { name = "platformdirs" },
     { name = "polyline" },
     { name = "python-frontmatter" },
@@ -648,6 +658,7 @@ requires-dist = [
     { name = "google-maps-routing", specifier = ">=0.10.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "jinja2", specifier = ">=3.1.6" },
+    { name = "mistune", specifier = ">=3.2.0" },
     { name = "platformdirs", specifier = ">=4.9.6" },
     { name = "polyline", specifier = ">=2.0.4" },
     { name = "python-frontmatter", specifier = ">=1.1.0" },

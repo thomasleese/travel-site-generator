@@ -3,6 +3,8 @@ import logging
 from pathlib import Path
 
 import jinja2
+from markupsafe import Markup
+import mistune
 
 from .routes import Routes
 from .timeline import Timeline
@@ -49,6 +51,11 @@ def generate(trips: Trips, routes: Routes, timeline: Timeline, path: Path):
         loader=jinja2.PackageLoader("travel_site_generator", "templates"),
         autoescape=jinja2.select_autoescape(),
     )
+
+    def markdown(value):
+        return Markup(mistune.markdown(value))
+
+    env.filters["markdown"] = markdown
 
     template = env.get_template("index.html")
 
