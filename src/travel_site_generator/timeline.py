@@ -18,8 +18,12 @@ class TimelineStop:
     mode_of_transport: Optional[ModeOfTransport]
 
     @staticmethod
-    def from_stop(stop: Stop, mode_of_transport: Optional[ModeOfTransport]) -> TimelineStop:
-        return TimelineStop(place=stop.place, date=stop.date, mode_of_transport=mode_of_transport)
+    def from_stop(
+        stop: Stop, mode_of_transport: Optional[ModeOfTransport]
+    ) -> TimelineStop:
+        return TimelineStop(
+            place=stop.place, date=stop.date, mode_of_transport=mode_of_transport
+        )
 
 
 @dataclass(frozen=True)
@@ -31,7 +35,11 @@ class TimelineJourney:
         stops = [TimelineStop.from_stop(journey.origin, mode_of_transport=None)]
 
         for leg in journey.legs:
-            stops.append(TimelineStop.from_stop(leg.destination, mode_of_transport=leg.mode_of_transport))
+            stops.append(
+                TimelineStop.from_stop(
+                    leg.destination, mode_of_transport=leg.mode_of_transport
+                )
+            )
 
         return TimelineJourney(stops=stops)
 

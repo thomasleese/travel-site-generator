@@ -2,6 +2,8 @@ import json
 import logging
 from pathlib import Path
 
+import jinja2
+
 from .routes import Routes
 from .timeline import Timeline
 from .trips import Trips
@@ -36,9 +38,21 @@ def write_geojson(trips: Trips, routes: Routes, path: Path):
         file.write(json.dumps(data))
 
 
-def write_site(trips: Trips, routes: Routes, timeline: Timeline, path: Path):
+def generate(trips: Trips, routes: Routes, timeline: Timeline, path: Path):
     logger.info("Saving to %s", path)
 
     path.mkdir(parents=True, exist_ok=True)
 
     write_geojson(trips, routes, path / "data.json")
+
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader("travel_site_generator", "templates"),
+        autoescape=jinja2.select_autoescape(),
+    )
+
+    template = env.get_template("index.html")
+
+    index_html = template.render(trips=trips, routes=routes, timeline=timeline)
+
+    with open(path / "index.html", "w") as file:
+        file.write(index_html)

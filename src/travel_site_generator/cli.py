@@ -6,7 +6,7 @@ from .places import load as load_places
 from .routes import load as load_routes
 from .timeline import load as load_timeline
 from .trips import load as load_trips
-from .writer import write_site
+from .generator import generate
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
     routes = load_routes(trips, gmaps_api_key=args.gmaps_api_key)
     timeline = load_timeline(trips)
 
-    write_site(trips, routes, timeline, output_path)
+    generate(trips, routes, timeline, output_path)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,10 @@
+{% for trip in timeline.trips %}
+  {{ trip.description }}
+
+  {% for journey in trip.journeys %}
+    {% for stop in journey.stops %}
+      <p>{{ stop.date }}</p>
+      <p>{{ stop.place }}</p>
+    {% endfor %}
+  {% endfor %}
+{% endfor %}
