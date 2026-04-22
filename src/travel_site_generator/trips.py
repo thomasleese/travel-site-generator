@@ -7,7 +7,7 @@ import re
 import frontmatter
 from frontmatter.default_handlers import BaseHandler
 
-from .journeys import load as load_journeys, Journeys
+from .journeys import load as load_journeys, Journeys, Journey
 from .places import Places
 
 
@@ -18,6 +18,19 @@ logger = logging.getLogger(__name__)
 class Trip:
     journeys: Journeys
     description: str
+
+    @property
+    def origin(self) -> Journey:
+        return self.journeys[0]
+
+    @property
+    def destination(self) -> Journey:
+        return self.journeys[-1]
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Trip):
+            return NotImplemented
+        return self.origin < other.origin
 
 
 type Trips = list[Trip]
@@ -50,4 +63,4 @@ def load(path: pathlib.Path, places: Places) -> Trips:
         logger.info("Loading %s", name)
         trips.append(_load(trip_path, places))
 
-    return trips
+    return sorted(trips)

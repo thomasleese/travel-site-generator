@@ -3,8 +3,9 @@ import logging
 from pathlib import Path
 
 from .places import load as load_places
-from .trips import load as load_trips
 from .routes import load as load_routes
+from .timeline import load as load_timeline
+from .trips import load as load_trips
 from .writer import write_site
 
 
@@ -25,8 +26,9 @@ def main():
     places = load_places(input_path)
     trips = load_trips(input_path, places)
     routes = load_routes(trips, gmaps_api_key=args.gmaps_api_key)
+    timeline = load_timeline(trips)
 
-    write_site(trips, routes, output_path)
+    write_site(trips, routes, timeline, output_path)
 
 
 if __name__ == "__main__":

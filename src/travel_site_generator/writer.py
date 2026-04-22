@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 from .routes import Routes
+from .timeline import Timeline
 from .trips import Trips
 
 
@@ -35,7 +36,7 @@ def write_geojson(trips: Trips, routes: Routes, path: Path):
         file.write(json.dumps(data))
 
 
-def write_site(trips: Trips, routes: Routes, path: Path):
+def write_site(trips: Trips, routes: Routes, timeline: Timeline, path: Path):
     logger.info("Saving to %s", path)
 
     path.mkdir(parents=True, exist_ok=True)

@@ -15,6 +15,11 @@ class Stop:
     def __str__(self):
         return f"{self.place} ({self.date})"
 
+    def __lt__(self, other):
+        if not isinstance(other, Stop):
+            return NotImplemented
+        return self.date < other.date
+
 
 class ModeOfTransport(StrEnum):
     BICYCLE = "bicycle"
@@ -42,6 +47,11 @@ class JourneyLeg:
 @dataclass(frozen=True)
 class Journey:
     legs: list[JourneyLeg]
+
+    def __lt__(self, other):
+        if not isinstance(other, Journey):
+            return NotImplemented
+        return self.origin < other.origin
 
     @property
     def origin(self) -> Stop:
@@ -80,7 +90,7 @@ KEYWORDS = [descriptor.value for descriptor in Descriptor] + [
 DATE_PATTERN = r"\d{4}-\d{2}-\d{2}"
 
 
-def _tokenize(s: str) -> list[Token]:
+def _tokenise(s: str) -> list[Token]:
     tokens = []
     i = 0
     n = len(s)
@@ -269,4 +279,4 @@ def _parse(tokens: list[Token], places: Places) -> Journeys:
 
 
 def load(string: str, places: Places) -> Journeys:
-    return _parse(_tokenize(string), places)
+    return sorted(_parse(_tokenise(string), places))
