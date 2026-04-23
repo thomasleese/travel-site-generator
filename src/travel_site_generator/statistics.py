@@ -16,18 +16,22 @@ class Statistics:
     @staticmethod
     def from_trips(trips: Trips, routes: Routes) -> "Statistics":
         return Statistics(
-            total_distance_km_by_mode_of_transport=calculate_total_distance_km_by_mode_of_transport(trips, routes)
+            total_distance_km_by_mode_of_transport=calculate_total_distance_km_by_mode_of_transport(
+                trips, routes
+            )
         )
 
 
-def calculate_total_distance_km_by_mode_of_transport(trips: Trips, routes: Routes) -> dict[ModeOfTransport, int]:
+def calculate_total_distance_km_by_mode_of_transport(
+    trips: Trips, routes: Routes
+) -> dict[ModeOfTransport, int]:
     values = {mode_of_transport: 0 for mode_of_transport in ModeOfTransport}
 
     for trip in trips:
         for journey in trip.journeys:
             for leg in journey.legs:
                 key = leg.mode_of_transport
-                values[key] = (values[key] + routes[leg].distance_km)
+                values[key] = values[key] + routes[leg].distance_km
 
     return values
 

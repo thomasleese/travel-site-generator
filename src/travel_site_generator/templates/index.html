@@ -7,11 +7,14 @@
 
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 
+    <script src="https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="static/index.css" />
   </head>
   <body>
+    {% include "_map.html" %}
     {% include "_statistics.html" %}
     {% include "_timeline.html" %}
-    {% include "_map.html" %}
   </body>
 </html>

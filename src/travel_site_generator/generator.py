@@ -62,7 +62,9 @@ class HTMLRenderer(BaseHTTPRenderer):
         return html + ">" + text + "</" + tag + ">\n"
 
 
-def write_index_html(trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path):
+def write_index_html(
+    trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path
+):
     template_loader = jinja2.PackageLoader("travel_site_generator")
 
     env = jinja2.Environment(
@@ -92,13 +94,17 @@ def write_index_html(trips: Trips, routes: Routes, timeline: Timeline, statistic
 
     template = env.get_template("index.html")
 
-    index_html = template.render(trips=trips, routes=routes, timeline=timeline, statistics=statistics)
+    index_html = template.render(
+        trips=trips, routes=routes, timeline=timeline, statistics=statistics
+    )
 
     with open(path, "w") as file:
         file.write(index_html)
 
 
-def generate(trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path):
+def generate(
+    trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path
+):
     logger.info("Saving to %s", path)
 
     path.mkdir(parents=True, exist_ok=True)

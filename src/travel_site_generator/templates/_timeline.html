@@ -1,5 +1,5 @@
 <aside class="timeline">
-  <h1>Timeline</h1>
+  <h1 class="visually-hidden">Timeline</h1>
 
   {% for trip in timeline.trips %}
     <div class="timeline-trip">
@@ -19,7 +19,7 @@
                        src="static/modes/{{ entry.mode_of_transport }}.svg"
                        alt="By {{ entry.mode_of_transport }}" />
                   <span class="timeline-travel-distance">
-                    {{ entry.distance_km }} km
+                    {{ entry.distance_km }}&nbsp;km
                   </span>
                   <span class="timeline-travel-dates">
                     {{ entry.origin_date | to_date(entry.destination_date) }}

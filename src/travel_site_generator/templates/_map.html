@@ -1,3 +1,35 @@
-<main class="map">
+<div id="map" class="map"></div>
 
-</main>
+<script>
+    console.log("Initialising map...")
+
+    var map = new maplibregl.Map({
+        container: "map",
+        style: "https://tiles.openfreemap.org/styles/positron",
+        center: [0, 0],
+        zoom: 3
+    });
+
+     map.on("style.load", () => {
+         map.setProjection({ type: "globe" });
+    });
+
+    map.on("load", async () => {
+        console.log("Map loaded")
+
+        map.addSource("data", {
+            type: "geojson",
+            data: "/data.json"
+        });
+
+        map.addLayer({
+            id: "data",
+            type: "line",
+            source: 'data',
+            paint: {
+              "line-color": "#666",
+              "line-width": 2
+            }
+        });
+    });
+</script>

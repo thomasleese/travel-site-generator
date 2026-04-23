@@ -1,5 +1,5 @@
 <aside class="statistics">
-  <h1>Statistics</h1>
+  <h1 class="visually-hidden">Statistics</h1>
 
   <dl class="statistics-table">
     {% for mode_of_transport, total_distance_km in statistics.total_distance_km_by_mode_of_transport.items() %}
@@ -7,7 +7,7 @@
         <dt>
           <img class="statistics-mode" src="static/modes/{{ mode_of_transport }}.svg" alt="By {{ mode_of_transport }}" />
         </dt>
-        <dd class="statistics-distance">{{ total_distance_km }} km</dd>
+        <dd class="statistics-distance">{{ total_distance_km }}&nbsp;km</dd>
       {% endif %}
     {% endfor %}
   </dl>
