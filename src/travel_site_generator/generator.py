@@ -11,6 +11,7 @@ from mistune.util import escape as escape_text
 from mistune import HTMLRenderer as BaseHTTPRenderer, Markdown
 
 from .routes import Routes
+from .statistics import Statistics
 from .timeline import Timeline
 from .trips import Trips
 
@@ -61,7 +62,7 @@ class HTMLRenderer(BaseHTTPRenderer):
         return html + ">" + text + "</" + tag + ">\n"
 
 
-def write_index_html(trips: Trips, routes: Routes, timeline: Timeline, path: Path):
+def write_index_html(trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path):
     template_loader = jinja2.PackageLoader("travel_site_generator")
 
     env = jinja2.Environment(
@@ -91,17 +92,17 @@ def write_index_html(trips: Trips, routes: Routes, timeline: Timeline, path: Pat
 
     template = env.get_template("index.html")
 
-    index_html = template.render(trips=trips, routes=routes, timeline=timeline)
+    index_html = template.render(trips=trips, routes=routes, timeline=timeline, statistics=statistics)
 
     with open(path, "w") as file:
         file.write(index_html)
 
 
-def generate(trips: Trips, routes: Routes, timeline: Timeline, path: Path):
+def generate(trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path):
     logger.info("Saving to %s", path)
 
     path.mkdir(parents=True, exist_ok=True)
 
     write_static(path / "static")
-    write_index_html(trips, routes, timeline, path / "index.html")
+    write_index_html(trips, routes, timeline, statistics, path / "index.html")
     write_geojson(trips, routes, path / "data.json")

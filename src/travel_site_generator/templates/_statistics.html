@@ -1,0 +1,14 @@
+<aside class="statistics">
+  <h1>Statistics</h1>
+
+  <dl class="statistics-table">
+    {% for mode_of_transport, total_distance_km in statistics.total_distance_km_by_mode_of_transport.items() %}
+      {% if total_distance_km > 0 %}
+        <dt>
+          <img class="statistics-mode" src="static/modes/{{ mode_of_transport }}.svg" alt="By {{ mode_of_transport }}" />
+        </dt>
+        <dd class="statistics-distance">{{ total_distance_km }} km</dd>
+      {% endif %}
+    {% endfor %}
+  </dl>
+</aside>

@@ -2,11 +2,12 @@ import argparse
 import logging
 from pathlib import Path
 
+from .generator import generate
 from .places import load as load_places
 from .routes import load as load_routes
+from .statistics import load as load_statistics
 from .timeline import load as load_timeline
 from .trips import load as load_trips
-from .generator import generate
 
 
 def main():
@@ -27,8 +28,9 @@ def main():
     trips = load_trips(input_path, places)
     routes = load_routes(trips, gmaps_api_key=args.gmaps_api_key)
     timeline = load_timeline(trips, routes)
+    statistics = load_statistics(trips, routes)
 
-    generate(trips, routes, timeline, output_path)
+    generate(trips, routes, timeline, statistics, output_path)
 
 
 if __name__ == "__main__":

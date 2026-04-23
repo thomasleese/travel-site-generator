@@ -1,0 +1,29 @@
+.statistics {
+    padding: 1rem;
+}
+
+.statistics-table dt {
+    float: left;
+    margin-right: 8px;
+    max-width: 32px;
+}
+
+.statistics-table dd {
+    padding-top: .3rem;
+    margin-bottom: .5em;
+}
+
+.statistics-table dd::after {
+    content: " ";
+    display: block;
+    clear: left;
+}
+
+.statistics-mode {
+    width: 24px;
+    height: 24px;
+}
+
+.statistics-distance {
+    font-weight: bold;
+}

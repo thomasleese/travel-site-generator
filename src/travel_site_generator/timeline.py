@@ -79,5 +79,5 @@ class Timeline:
 
 
 def load(trips: Trips, routes: Routes) -> Timeline:
-    logger.info("Loading timeline from %i trips", len(trips))
+    logger.info("Loading timeline for %i trips", len(trips))
     return Timeline.from_trips(trips, routes)

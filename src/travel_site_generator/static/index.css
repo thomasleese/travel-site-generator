@@ -2,5 +2,6 @@
 
 @import "reset.css" layer(reset);
 @import "defaults.css" layer(defaults);
+@import "statistics.css" layer(components);
 @import "timeline.css" layer(components);
 @import "map.css" layer(components);
