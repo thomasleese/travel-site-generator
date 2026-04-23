@@ -13,8 +13,15 @@
             {% else %}
               <li class="timeline-travel">
                 <span class="timeline-travel-content">
-                  <img src="static/modes/{{ entry.mode_of_transport }}.svg" alt="By {{ entry.mode_of_transport }}" />
-                  {{ entry.origin_date | to_date(entry.destination_date) }}
+                  <img class="timeline-travel-mode"
+                       src="static/modes/{{ entry.mode_of_transport }}.svg"
+                       alt="By {{ entry.mode_of_transport }}" />
+                  <span class="timeline-travel-distance">
+                    {{ entry.distance_km }}km
+                  </span>
+                  <span class="timeline-travel-dates">
+                    {{ entry.origin_date | to_date(entry.destination_date) }}
+                  </span>
                 </span>
               </li>
             {% endif %}

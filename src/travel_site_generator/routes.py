@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import logging
 from typing import NamedTuple, Optional
 
+import geopy.distance
 from google.api_core.client_options import ClientOptions
 from google.type.latlng_pb2 import LatLng
 from google.maps import routing_v2
@@ -24,6 +25,7 @@ class Point(NamedTuple):
 @dataclass(frozen=True)
 class Route:
     points: list[Point]
+    distance_km: int
     is_accurate: Optional[bool] = None
 
     def to_encoded_polyline(self) -> str:
@@ -31,23 +33,19 @@ class Route:
 
     @classmethod
     def from_encoded_polyline(
-        cls, encoded_polyline: str, is_accurate: Optional[bool] = None
+        cls, encoded_polyline: str, distance_km: int, is_accurate: Optional[bool] = None
     ) -> "Route":
         points = [
             Point(latitude, longitude)
             for latitude, longitude in polyline.decode(encoded_polyline)
         ]
 
-        return Route(points=points, is_accurate=is_accurate)
+        return Route(points=points, distance_km=distance_km, is_accurate=is_accurate)
 
 
 class LegWrapper:
     def __init__(self, leg: JourneyLeg):
         self.leg = leg
-
-    @staticmethod
-    def _stop_to_point(stop: Stop) -> Point:
-        return Point(stop.place.latitude, stop.place.longitude)
 
     @staticmethod
     def _stop_to_lat_lng(stop: Stop) -> LatLng:
@@ -71,11 +69,17 @@ class LegWrapper:
         )
 
     def to_fallback_route(self) -> Route:
+        point_a = self.leg.origin.place.coordinates
+        point_b = self.leg.destination.place.coordinates
+
         points = [
-            self._stop_to_point(self.leg.origin),
-            self._stop_to_point(self.leg.destination),
+            Point(point_a[0], point_a[1]),
+            Point(point_b[0], point_b[1]),
         ]
-        return Route(points=points, is_accurate=False)
+
+        distance_km = round(geopy.distance.distance(point_a, point_b).km)
+
+        return Route(points=points, distance_km=distance_km, is_accurate=False)
 
     def to_origin(self) -> routing_v2.Waypoint:
         return self._stop_to_waypoint(self.leg.origin)
@@ -87,7 +91,7 @@ class LegWrapper:
         if self.leg.mode_of_transport in [ModeOfTransport.CAR, ModeOfTransport.FOOT]:
             return None
 
-        tzinfo = self.leg.origin.place.get_tzinfo()
+        tzinfo = self.leg.origin.place.tzinfo
 
         # FIXME: Pick a date with the same day as the journey
         # FIXME: Don't pick an arbitrary hour
@@ -174,6 +178,7 @@ class Cache(SQLiteCache):
                 destination_date DATE NOT NULL,
                 mode_of_transport TEXT NOT NULL,
                 encoded_polyline TEXT NOT NULL,
+                distance_km INTEGER NOT NULL,
                 expires_at TIMESTAMP NOT NULL
             )
         """)
@@ -203,7 +208,7 @@ class Cache(SQLiteCache):
 
         row = self.cursor.execute(
             """
-            SELECT encoded_polyline
+            SELECT encoded_polyline, distance_km
             FROM routes
             WHERE origin_latitude = ?
               AND origin_longitude = ?
@@ -220,7 +225,7 @@ class Cache(SQLiteCache):
         if row is None:
             raise KeyError(f"Route not found: {leg}")
 
-        return Route.from_encoded_polyline(row[0], is_accurate=True)
+        return Route.from_encoded_polyline(row[0], row[1])
 
     def get(self, leg: JourneyLeg) -> Optional[Route]:
         try:
@@ -240,11 +245,12 @@ class Cache(SQLiteCache):
 
         values = LegWrapper(leg).to_cache_values() + (
             route.to_encoded_polyline(),
+            route.distance_km,
             expires_at,
         )
 
         self.cursor.execute(
-            "INSERT INTO routes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", values
+            "INSERT INTO routes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", values
         )
         self.connection.commit()
 
@@ -275,9 +281,16 @@ class RouteFetcher:
             polyline_quality=routing_v2.PolylineQuality.OVERVIEW,
         )
 
+        metadata = [
+            (
+                "x-goog-fieldmask",
+                "routes.distanceMeters,routes.polyline.encodedPolyline",
+            )
+        ]
+
         response = self.client.compute_routes(
             request=request,
-            metadata=[("x-goog-fieldmask", "routes.polyline.encodedPolyline")],
+            metadata=metadata,
         )
 
         routes = response.routes
@@ -286,7 +299,11 @@ class RouteFetcher:
             raise ValueError(f"No routes found for {leg}")
 
         encoded_polyline = routes[0].polyline.encoded_polyline
-        return Route.from_encoded_polyline(encoded_polyline)
+        distance_km = round(routes[0].distance_meters / 1000.0)
+
+        return Route.from_encoded_polyline(
+            encoded_polyline, distance_km, is_accurate=True
+        )
 
 
 def load(trips: Trips, gmaps_api_key: str) -> Routes:

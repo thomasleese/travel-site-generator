@@ -26,7 +26,7 @@ def main():
     places = load_places(input_path)
     trips = load_trips(input_path, places)
     routes = load_routes(trips, gmaps_api_key=args.gmaps_api_key)
-    timeline = load_timeline(trips)
+    timeline = load_timeline(trips, routes)
 
     generate(trips, routes, timeline, output_path)
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import datetime
 from itertools import batched
-from functools import cache
+from functools import cache, cached_property
 import logging
 import pathlib
 from zoneinfo import ZoneInfo
@@ -34,9 +34,14 @@ class Place:
     def __str__(self):
         return f"{self.name} ({self.type}, {self.country_code})"
 
-    def get_tzinfo(self) -> ZoneInfo:
+    @cached_property
+    def tzinfo(self) -> ZoneInfo:
         tz = tzfpy.get_tz(self.longitude, self.latitude)
         return ZoneInfo(tz)
+
+    @cached_property
+    def coordinates(self) -> tuple[float, float]:
+        return (self.latitude, self.longitude)
 
 
 type Places = dict[str, Place]
