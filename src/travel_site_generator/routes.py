@@ -24,18 +24,21 @@ class Point(NamedTuple):
 @dataclass(frozen=True)
 class Route:
     points: list[Point]
+    is_accurate: Optional[bool] = None
 
     def to_encoded_polyline(self) -> str:
         return polyline.encode([tuple(point) for point in self.points])
 
     @classmethod
-    def from_encoded_polyline(cls, encoded_polyline: str) -> "Route":
+    def from_encoded_polyline(
+        cls, encoded_polyline: str, is_accurate: Optional[bool] = None
+    ) -> "Route":
         points = [
             Point(latitude, longitude)
             for latitude, longitude in polyline.decode(encoded_polyline)
         ]
 
-        return Route(points=points)
+        return Route(points=points, is_accurate=is_accurate)
 
 
 class LegWrapper:
@@ -72,7 +75,7 @@ class LegWrapper:
             self._stop_to_point(self.leg.origin),
             self._stop_to_point(self.leg.destination),
         ]
-        return Route(points=points)
+        return Route(points=points, is_accurate=False)
 
     def to_origin(self) -> routing_v2.Waypoint:
         return self._stop_to_waypoint(self.leg.origin)
@@ -170,7 +173,8 @@ class Cache(SQLiteCache):
                 destination_longitude REAL NOT NULL,
                 destination_date DATE NOT NULL,
                 mode_of_transport TEXT NOT NULL,
-                encoded_polyline TEXT NOT NULL
+                encoded_polyline TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL
             )
         """)
 
@@ -187,6 +191,7 @@ class Cache(SQLiteCache):
               AND destination_longitude = ?
               AND destination_date = ?
               AND mode_of_transport = ?
+              AND expires_at > CURRENT_TIMESTAMP
         """,
             values,
         ).fetchone()
@@ -207,6 +212,7 @@ class Cache(SQLiteCache):
               AND destination_longitude = ?
               AND destination_date = ?
               AND mode_of_transport = ?
+              AND expires_at > CURRENT_TIMESTAMP
         """,
             values,
         ).fetchone()
@@ -214,7 +220,7 @@ class Cache(SQLiteCache):
         if row is None:
             raise KeyError(f"Route not found: {leg}")
 
-        return Route.from_encoded_polyline(row[0])
+        return Route.from_encoded_polyline(row[0], is_accurate=True)
 
     def get(self, leg: JourneyLeg) -> Optional[Route]:
         try:
@@ -223,9 +229,22 @@ class Cache(SQLiteCache):
             return None
 
     def __setitem__(self, leg: JourneyLeg, route: Route):
-        values = LegWrapper(leg).to_cache_values() + (route.to_encoded_polyline(),)
+        if route.is_accurate:
+            expires_at = datetime.datetime.now(
+                datetime.timezone.utc
+            ) + datetime.timedelta(days=28)
+        else:
+            expires_at = datetime.datetime.now(
+                datetime.timezone.utc
+            ) + datetime.timedelta(days=7)
+
+        values = LegWrapper(leg).to_cache_values() + (
+            route.to_encoded_polyline(),
+            expires_at,
+        )
+
         self.cursor.execute(
-            "INSERT INTO routes VALUES (?, ?, ?, ?, ?, ?, ?, ?)", values
+            "INSERT INTO routes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", values
         )
         self.connection.commit()
 
@@ -295,11 +314,12 @@ def load(trips: Trips, gmaps_api_key: str) -> Routes:
                 logger.info("Fetching route for %s", leg)
 
                 try:
-                    route = cache[leg] = route_fetcher.fetch(leg)
+                    route = route_fetcher.fetch(leg)
                 except ValueError:
                     logger.warning("Failed to fetch route for %s", leg)
                     route = LegWrapper(leg).to_fallback_route()
 
+                cache[leg] = route
                 routes[leg] = route
 
     return routes

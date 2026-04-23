@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import datetime
 from itertools import batched
 from functools import cache
 import logging
@@ -53,7 +54,8 @@ class Cache(SQLiteCache):
                 longitude REAL NOT NULL,
                 name TEXT NOT NULL,
                 type TEXT NOT NULL,
-                country_code TEXT NOT NULL
+                country_code TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL
             )
         """)
 
@@ -61,7 +63,7 @@ class Cache(SQLiteCache):
         existing_osm_ids = {
             row[0]
             for row in self.cursor.execute(
-                f"SELECT osm_id FROM places WHERE osm_id IN ({','.join('?' * len(osm_ids))})",
+                f"SELECT osm_id FROM places WHERE expires_at > CURRENT_TIMESTAMP AND osm_id IN ({','.join('?' * len(osm_ids))})",
                 list(osm_ids),
             ).fetchall()
         }
@@ -86,16 +88,20 @@ class Cache(SQLiteCache):
         name = data["name"]
         type = data["type"]
         country_code = data["address"]["country_code"]
+        expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+            days=21
+        )
 
-        row = (osm_id, latitude, longitude, name, type, country_code)
+        values = (osm_id, latitude, longitude, name, type, country_code, expires_at)
 
-        self.cursor.execute("INSERT INTO places VALUES (?, ?, ?, ?, ?, ?)", row)
+        self.cursor.execute("INSERT INTO places VALUES (?, ?, ?, ?, ?, ?, ?)", values)
         self.connection.commit()
 
     @cache
     def __getitem__(self, osm_id):
-        osm_id, latitude, longitude, name, type, country_code = self.cursor.execute(
-            "SELECT * FROM places WHERE osm_id = ?", (osm_id,)
+        osm_id, latitude, longitude, name, type, country_code, *_ = self.cursor.execute(
+            "SELECT * FROM places WHERE expires_at > CURRENT_TIMESTAMP AND osm_id = ?",
+            (osm_id,),
         ).fetchone()
 
         return Place(
