@@ -97,8 +97,11 @@ class Cache(SQLiteCache):
             days=21
         )
 
+        logger.debug("Inserting %s", osm_id)
+
         values = (osm_id, latitude, longitude, name, type, country_code, expires_at)
 
+        self.cursor.execute("DELETE FROM places WHERE osm_id = ?", (osm_id,))
         self.cursor.execute("INSERT INTO places VALUES (?, ?, ?, ?, ?, ?, ?)", values)
         self.connection.commit()
 
