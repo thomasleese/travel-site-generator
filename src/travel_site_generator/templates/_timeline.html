@@ -6,10 +6,11 @@
       {{ trip.description | markdown }}
 
       {% for journey in trip.journeys %}
-        <ol class="timeline-journey">
+        <ol class="timeline-journey" style="border-left-color: {{ trip.colour.css_value }}">
           {% for entry in journey.entries %}
             {% if entry.place %}
               <li class="timeline-place">
+                <span class="timeline-place-blob" style="border-color: {{ trip.colour.css_value }}"></span>
                 <span class="timeline-place-content">{{ entry.place.name }}</span>
               </li>
             {% else %}

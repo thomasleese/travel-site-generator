@@ -26,11 +26,7 @@
     font-weight: bold;
 }
 
-.timeline-place-content {
-    margin-left: -10px;
-}
-
-.timeline-place:before {
+.timeline-place-blob {
     width: 30px;
     height: 30px;
     border-radius: 30px;
@@ -42,6 +38,10 @@
     position: relative;
     left: -19px;
     flex-shrink: 0;
+}
+
+.timeline-place-content {
+    margin-left: -10px;
 }
 
 .timeline-travel {

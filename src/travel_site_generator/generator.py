@@ -10,6 +10,7 @@ from markupsafe import Markup
 from mistune.util import escape as escape_text
 from mistune import HTMLRenderer as BaseHTTPRenderer, Markdown
 
+from .colours import Colours
 from .routes import Routes
 from .statistics import Statistics
 from .timeline import Timeline
@@ -26,7 +27,7 @@ def write_static(dst_path: Path):
     shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
 
 
-def write_geojson(trips: Trips, routes: Routes, path: Path):
+def write_geojson(trips: Trips, colours: Colours, routes: Routes, path: Path):
     logger.info("Saving GeoJSON data to %s", path)
 
     features = [
@@ -34,12 +35,16 @@ def write_geojson(trips: Trips, routes: Routes, path: Path):
             "type": "Feature",
             "properties": {},
             "geometry": {
+                "type": "LineString",
                 "coordinates": [
                     [point.longitude, point.latitude]
                     for leg in journey.legs
                     for point in routes[leg].points
                 ],
-                "type": "LineString",
+            },
+            "style": {
+                "stroke": colours[trip].css_value,
+                "stroke-width": "3",
             },
         }
         for trip in trips
@@ -63,7 +68,11 @@ class HTMLRenderer(BaseHTTPRenderer):
 
 
 def write_index_html(
-    trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path
+    trips: Trips,
+    routes: Routes,
+    timeline: Timeline,
+    statistics: Statistics,
+    path: Path,
 ):
     template_loader = jinja2.PackageLoader("travel_site_generator")
 
@@ -95,7 +104,10 @@ def write_index_html(
     template = env.get_template("index.html")
 
     index_html = template.render(
-        trips=trips, routes=routes, timeline=timeline, statistics=statistics
+        routes=routes,
+        statistics=statistics,
+        timeline=timeline,
+        trips=trips,
     )
 
     with open(path, "w") as file:
@@ -103,7 +115,12 @@ def write_index_html(
 
 
 def generate(
-    trips: Trips, routes: Routes, timeline: Timeline, statistics: Statistics, path: Path
+    trips: Trips,
+    colours: Colours,
+    routes: Routes,
+    timeline: Timeline,
+    statistics: Statistics,
+    path: Path,
 ):
     logger.info("Saving to %s", path)
 
@@ -111,4 +128,4 @@ def generate(
 
     write_static(path / "static")
     write_index_html(trips, routes, timeline, statistics, path / "index.html")
-    write_geojson(trips, routes, path / "data.json")
+    write_geojson(trips, colours, routes, path / "data.json")

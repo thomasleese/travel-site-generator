@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import logging
 from typing import Optional
 
+from .colours import Colour, Colours
 from .journeys import Journey, Stop, ModeOfTransport, JourneyLeg
 from .places import Place
 from .routes import Routes
@@ -51,12 +52,14 @@ class TimelineJourney:
 
 @dataclass(frozen=True)
 class TimelineTrip:
+    colour: Colour
     description: str
     journeys: list[TimelineJourney]
 
     @staticmethod
-    def from_trip(trip: Trip, routes: Routes) -> TimelineTrip:
+    def from_trip(trip: Trip, colours: Colours, routes: Routes) -> TimelineTrip:
         return TimelineTrip(
+            colour=colours[trip],
             description=trip.description,
             journeys=[
                 TimelineJourney.from_journey(journey, routes)
@@ -70,14 +73,16 @@ class Timeline:
     trips: list[TimelineTrip]
 
     @staticmethod
-    def from_trips(trips: Trips, routes: Routes) -> Timeline:
+    def from_trips(trips: Trips, colours: Colours, routes: Routes) -> Timeline:
         return Timeline(
             trips=list(
-                reversed([TimelineTrip.from_trip(trip, routes) for trip in trips])
+                reversed(
+                    [TimelineTrip.from_trip(trip, colours, routes) for trip in trips]
+                )
             )
         )
 
 
-def load(trips: Trips, routes: Routes) -> Timeline:
+def load(trips: Trips, colours: Colours, routes: Routes) -> Timeline:
     logger.info("Loading timeline for %i trips", len(trips))
-    return Timeline.from_trips(trips, routes)
+    return Timeline.from_trips(trips, colours, routes)

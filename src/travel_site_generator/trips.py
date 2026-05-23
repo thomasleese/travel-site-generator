@@ -3,6 +3,7 @@ import io
 import logging
 import pathlib
 import re
+import uuid
 
 import frontmatter
 from frontmatter.default_handlers import BaseHandler
@@ -16,8 +17,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class Trip:
+    uuid: uuid.UUID
     journeys: Journeys
     description: str
+
+    def __hash__(self):
+        return hash(self.uuid)
 
     @property
     def origin(self) -> Journey:
@@ -50,7 +55,7 @@ class JourneysHandler(BaseHandler):
 
 def _load(fd: str | io.IOBase | pathlib.Path, places: Places) -> Trip:
     post = frontmatter.load(fd, handler=JourneysHandler(places))
-    return Trip(journeys=post["journeys"], description=post.content)
+    return Trip(uuid=uuid.uuid4(), journeys=post["journeys"], description=post.content)
 
 
 def load(path: pathlib.Path, places: Places) -> Trips:

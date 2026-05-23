@@ -2,6 +2,7 @@ import argparse
 import logging
 from pathlib import Path
 
+from .colours import load as load_colours
 from .generator import generate
 from .places import load as load_places
 from .routes import load as load_routes
@@ -26,11 +27,12 @@ def main():
 
     places = load_places(input_path)
     trips = load_trips(input_path, places)
+    colours = load_colours(trips)
     routes = load_routes(trips, gmaps_api_key=args.gmaps_api_key)
-    timeline = load_timeline(trips, routes)
+    timeline = load_timeline(trips, colours, routes)
     statistics = load_statistics(trips, routes)
 
-    generate(trips, routes, timeline, statistics, output_path)
+    generate(trips, colours, routes, timeline, statistics, output_path)
 
 
 if __name__ == "__main__":
