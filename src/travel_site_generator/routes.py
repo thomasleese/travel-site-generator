@@ -3,13 +3,13 @@ from dataclasses import dataclass
 import logging
 from typing import NamedTuple, Optional
 
+from cachetout import Cache
 import geopy.distance
 from google.api_core.client_options import ClientOptions
 from google.type.latlng_pb2 import LatLng
 from google.maps import routing_v2
 import polyline
 
-from .cache import SQLiteCache
 from .journeys import JourneyLeg, ModeOfTransport, Stop
 from .trips import Trips
 
@@ -27,9 +27,6 @@ class Route:
     points: list[Point]
     distance_km: int
     is_accurate: Optional[bool] = None
-
-    def to_encoded_polyline(self) -> str:
-        return polyline.encode([tuple(point) for point in self.points])
 
     @classmethod
     def from_encoded_polyline(
@@ -55,17 +52,6 @@ class LegWrapper:
     def _stop_to_waypoint(cls, stop: Stop) -> routing_v2.Waypoint:
         return routing_v2.Waypoint(
             location=routing_v2.Location(lat_lng=cls._stop_to_lat_lng(stop))
-        )
-
-    def to_cache_values(self):
-        return (
-            self.leg.origin.place.latitude,
-            self.leg.origin.place.longitude,
-            self.leg.origin.date,
-            self.leg.destination.place.latitude,
-            self.leg.destination.place.longitude,
-            self.leg.destination.date,
-            self.leg.mode_of_transport,
         )
 
     def to_fallback_route(self) -> Route:
@@ -163,98 +149,6 @@ class LegWrapper:
 type Routes = dict[JourneyLeg, Route]
 
 
-class Cache(SQLiteCache):
-    def __init__(self):
-        super().__init__(name="routes")
-
-    def set_up_tables(self):
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS routes(
-                origin_latitude REAL NOT NULL,
-                origin_longitude REAL NOT NULL,
-                origin_date DATE NOT NULL,
-                destination_latitude REAL NOT NULL,
-                destination_longitude REAL NOT NULL,
-                destination_date DATE NOT NULL,
-                mode_of_transport TEXT NOT NULL,
-                encoded_polyline TEXT NOT NULL,
-                distance_km INTEGER NOT NULL,
-                expires_at TIMESTAMP NOT NULL
-            )
-        """)
-
-    def __contains__(self, leg: JourneyLeg) -> bool:
-        values = LegWrapper(leg).to_cache_values()
-
-        row = self.cursor.execute(
-            """
-            SELECT 1 FROM routes
-            WHERE origin_latitude = ?
-              AND origin_longitude = ?
-              AND origin_date = ?
-              AND destination_latitude = ?
-              AND destination_longitude = ?
-              AND destination_date = ?
-              AND mode_of_transport = ?
-              AND expires_at > CURRENT_TIMESTAMP
-        """,
-            values,
-        ).fetchone()
-
-        return row is not None
-
-    def __getitem__(self, leg: JourneyLeg) -> Route:
-        values = LegWrapper(leg).to_cache_values()
-
-        row = self.cursor.execute(
-            """
-            SELECT encoded_polyline, distance_km
-            FROM routes
-            WHERE origin_latitude = ?
-              AND origin_longitude = ?
-              AND origin_date = ?
-              AND destination_latitude = ?
-              AND destination_longitude = ?
-              AND destination_date = ?
-              AND mode_of_transport = ?
-              AND expires_at > CURRENT_TIMESTAMP
-        """,
-            values,
-        ).fetchone()
-
-        if row is None:
-            raise KeyError(f"Route not found: {leg}")
-
-        return Route.from_encoded_polyline(row[0], row[1])
-
-    def get(self, leg: JourneyLeg) -> Optional[Route]:
-        try:
-            return self[leg]
-        except KeyError:
-            return None
-
-    def __setitem__(self, leg: JourneyLeg, route: Route):
-        if route.is_accurate:
-            expires_at = datetime.datetime.now(
-                datetime.timezone.utc
-            ) + datetime.timedelta(days=28)
-        else:
-            expires_at = datetime.datetime.now(
-                datetime.timezone.utc
-            ) + datetime.timedelta(days=7)
-
-        values = LegWrapper(leg).to_cache_values() + (
-            route.to_encoded_polyline(),
-            route.distance_km,
-            expires_at,
-        )
-
-        self.cursor.execute(
-            "INSERT INTO routes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", values
-        )
-        self.connection.commit()
-
-
 class RouteFetcher:
     def __init__(self, gmaps_api_key: str):
         client_options = ClientOptions(api_key=gmaps_api_key)
@@ -310,7 +204,7 @@ def load(trips: Trips, gmaps_api_key: str) -> Routes:
     logger.info("Loading routes")
 
     route_fetcher = RouteFetcher(gmaps_api_key)
-    cache = Cache()
+    cache = Cache("routes", app_name="travel-site-generator")
 
     routes = {}
 
@@ -324,7 +218,7 @@ def load(trips: Trips, gmaps_api_key: str) -> Routes:
                     routes[leg] = LegWrapper(leg).to_fallback_route()
                     continue
 
-                if cached_route := cache.get(leg):
+                if cached_route := cache.get(leg, type=Route):
                     routes[leg] = cached_route
                     continue
 
@@ -336,7 +230,17 @@ def load(trips: Trips, gmaps_api_key: str) -> Routes:
                     logger.warning("Failed to fetch route for %s", leg)
                     route = LegWrapper(leg).to_fallback_route()
 
-                cache[leg] = route
+                if route.is_accurate:
+                    expires_at = datetime.datetime.now(
+                        datetime.timezone.utc
+                    ) + datetime.timedelta(days=28)
+                else:
+                    expires_at = datetime.datetime.now(
+                        datetime.timezone.utc
+                    ) + datetime.timedelta(days=7)
+
+                cache.set(leg, route, expires_at=expires_at)
+
                 routes[leg] = route
 
     return routes

@@ -1,15 +1,15 @@
 from dataclasses import dataclass
 import datetime
 from itertools import batched
-from functools import cache, cached_property
+from functools import cached_property
 import logging
 import pathlib
 from zoneinfo import ZoneInfo
 
+from cachetout import Cache
 import tzfpy
 import yaml
 
-from .cache import SQLiteCache
 from .osm import Nominatim
 
 
@@ -47,79 +47,27 @@ class Place:
 type Places = dict[str, Place]
 
 
-class Cache(SQLiteCache):
-    def __init__(self):
-        super().__init__(name="places")
+def populate_cache(cache: Cache, osm_ids: set[str]):
+    existing_osm_ids = {
+        osm_id for osm_id in osm_ids if cache.get(osm_id, type=Place) is not None
+    }
 
-    def set_up_tables(self):
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS places(
-                osm_id TEXT PRIMARY KEY NOT NULL,
-                latitude REAL NOT NULL,
-                longitude REAL NOT NULL,
-                name TEXT NOT NULL,
-                type TEXT NOT NULL,
-                country_code TEXT NOT NULL,
-                expires_at TIMESTAMP NOT NULL
-            )
-        """)
+    expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=21
+    )
 
-    def populate_from(self, *, osm_ids: set[str]):
-        existing_osm_ids = {
-            row[0]
-            for row in self.cursor.execute(
-                f"SELECT osm_id FROM places WHERE expires_at > CURRENT_TIMESTAMP AND osm_id IN ({','.join('?' * len(osm_ids))})",
-                list(osm_ids),
-            ).fetchall()
-        }
+    if new_osm_ids := osm_ids - existing_osm_ids:
+        for batch in batched(new_osm_ids, 50):
+            for data in nominatim.lookup(osm_ids=batch):
+                osm_id = data["osm_type"][0].upper() + str(data["osm_id"])
+                latitude = float(data["lat"])
+                longitude = float(data["lon"])
+                name = data["name"]
+                type = data["type"]
+                country_code = data["address"]["country_code"]
 
-        if new_osm_ids := osm_ids - existing_osm_ids:
-            self.insert_osm_ids(new_osm_ids)
-
-    def insert_osm_ids(self, osm_ids):
-        logger.debug("Fetching and inserting %s", osm_ids)
-
-        for batch in batched(osm_ids, 50):
-            self._fetch_and_insert(batch)
-
-    def _fetch_and_insert(self, osm_ids):
-        for data in nominatim.lookup(osm_ids=osm_ids):
-            self._insert(data)
-
-    def _insert(self, data):
-        osm_id = data["osm_type"][0].upper() + str(data["osm_id"])
-        latitude = data["lat"]
-        longitude = data["lon"]
-        name = data["name"]
-        type = data["type"]
-        country_code = data["address"]["country_code"]
-        expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-            days=21
-        )
-
-        logger.debug("Inserting %s", osm_id)
-
-        values = (osm_id, latitude, longitude, name, type, country_code, expires_at)
-
-        self.cursor.execute("DELETE FROM places WHERE osm_id = ?", (osm_id,))
-        self.cursor.execute("INSERT INTO places VALUES (?, ?, ?, ?, ?, ?, ?)", values)
-        self.connection.commit()
-
-    @cache
-    def __getitem__(self, osm_id):
-        osm_id, latitude, longitude, name, type, country_code, *_ = self.cursor.execute(
-            "SELECT * FROM places WHERE expires_at > CURRENT_TIMESTAMP AND osm_id = ?",
-            (osm_id,),
-        ).fetchone()
-
-        return Place(
-            osm_id=osm_id,
-            latitude=latitude,
-            longitude=longitude,
-            name=name,
-            type=type,
-            country_code=country_code,
-        )
+                place = Place(osm_id, latitude, longitude, name, type, country_code)
+                cache.set(osm_id, place, expires_at=expires_at)
 
 
 def load(path: pathlib.Path) -> Places:
@@ -130,6 +78,7 @@ def load(path: pathlib.Path) -> Places:
     with open(places_path) as file:
         data = yaml.safe_load(file.read())
 
-    cache = Cache()
-    cache.populate_from(osm_ids=set(data.values()))
-    return {slug: cache[osm_id] for slug, osm_id in data.items()}
+    cache = Cache("places", app_name="travel-site-generator")
+    populate_cache(cache, osm_ids=set(data.values()))
+
+    return {slug: cache.get(osm_id, type=Place) for slug, osm_id in data.items()}
