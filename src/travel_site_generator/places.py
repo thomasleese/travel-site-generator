@@ -1,17 +1,16 @@
-from dataclasses import dataclass
 import datetime
-from itertools import batched
-from functools import cached_property
 import logging
 import pathlib
+from dataclasses import dataclass
+from functools import cached_property
+from itertools import batched
 from zoneinfo import ZoneInfo
 
-from cachetout import Cache
 import tzfpy
 import yaml
+from cachetout import Cache
 
 from .osm import Nominatim
-
 
 logger = logging.getLogger(__name__)
 nominatim = Nominatim()
@@ -52,9 +51,7 @@ def populate_cache(cache: Cache, osm_ids: set[str]):
         osm_id for osm_id in osm_ids if cache.get(osm_id, type=Place) is not None
     }
 
-    expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-        days=21
-    )
+    expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=21)
 
     if new_osm_ids := osm_ids - existing_osm_ids:
         for batch in batched(new_osm_ids, 50):

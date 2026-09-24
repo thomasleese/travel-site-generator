@@ -1,7 +1,7 @@
 from datetime import date
 
-from travel_site_generator.journeys import load as load_journeys, ModeOfTransport
-
+from travel_site_generator.journeys import ModeOfTransport
+from travel_site_generator.journeys import load as load_journeys
 
 HEATHROW = object()
 GATWICK = object()

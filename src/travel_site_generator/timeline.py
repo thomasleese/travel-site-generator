@@ -1,25 +1,23 @@
 import datetime
-from dataclasses import dataclass
 import logging
-from typing import Optional
+from dataclasses import dataclass
 
 from .colours import Colour, Colours
-from .journeys import Journey, Stop, ModeOfTransport, JourneyLeg
+from .journeys import Journey, JourneyLeg, ModeOfTransport, Stop
 from .places import Place
 from .routes import Routes
 from .trips import Trip, Trips
-
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class TimelineEntry:
-    place: Optional[Place] = None
-    origin_date: Optional[datetime.date] = None
-    destination_date: Optional[datetime.date] = None
-    mode_of_transport: Optional[ModeOfTransport] = None
-    distance_km: Optional[int] = None
+    place: Place | None = None
+    origin_date: datetime.date | None = None
+    destination_date: datetime.date | None = None
+    mode_of_transport: ModeOfTransport | None = None
+    distance_km: int | None = None
 
     @staticmethod
     def from_stop(stop: Stop) -> TimelineEntry:

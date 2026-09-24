@@ -1,18 +1,17 @@
 import datetime
-from dataclasses import dataclass
 import logging
-from typing import NamedTuple, Optional
+from dataclasses import dataclass
+from typing import NamedTuple
 
-from cachetout import Cache
 import geopy.distance
-from google.api_core.client_options import ClientOptions
-from google.type.latlng_pb2 import LatLng
-from google.maps import routing_v2
 import polyline
+from cachetout import Cache
+from google.api_core.client_options import ClientOptions
+from google.maps import routing_v2
+from google.type.latlng_pb2 import LatLng
 
 from .journeys import JourneyLeg, ModeOfTransport, Stop
 from .trips import Trips
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +25,12 @@ class Point(NamedTuple):
 class Route:
     points: list[Point]
     distance_km: int
-    is_accurate: Optional[bool] = None
+    is_accurate: bool | None = None
 
     @classmethod
     def from_encoded_polyline(
-        cls, encoded_polyline: str, distance_km: int, is_accurate: Optional[bool] = None
-    ) -> "Route":
+        cls, encoded_polyline: str, distance_km: int, is_accurate: bool | None = None
+    ) -> Route:
         points = [
             Point(latitude, longitude)
             for latitude, longitude in polyline.decode(encoded_polyline)
@@ -73,7 +72,7 @@ class LegWrapper:
     def to_destination(self) -> routing_v2.Waypoint:
         return self._stop_to_waypoint(self.leg.destination)
 
-    def to_departure_time(self) -> Optional[datetime.datetime]:
+    def to_departure_time(self) -> datetime.datetime | None:
         if self.leg.mode_of_transport in [ModeOfTransport.CAR, ModeOfTransport.FOOT]:
             return None
 
@@ -82,16 +81,16 @@ class LegWrapper:
         # FIXME: Pick a date with the same day as the journey
         # FIXME: Don't pick an arbitrary hour
 
-        return datetime.datetime.now(datetime.timezone.utc).replace(
+        return datetime.datetime.now(datetime.UTC).replace(
             hour=10, minute=0, second=0, tzinfo=tzinfo
         ) - datetime.timedelta(days=1)
 
-    def to_arrival_time(self) -> Optional[datetime.datetime]:
+    def to_arrival_time(self) -> datetime.datetime | None:
         return None
 
     def to_travel_mode_and_transit_preferences(
         self,
-    ) -> tuple[routing_v2.RouteTravelMode, Optional[routing_v2.TransitPreferences]]:
+    ) -> tuple[routing_v2.RouteTravelMode, routing_v2.TransitPreferences | None]:
         match self.leg.mode_of_transport:
             case ModeOfTransport.BICYCLE:
                 return routing_v2.RouteTravelMode.BICYCLE, None
@@ -232,11 +231,11 @@ def load(trips: Trips, gmaps_api_key: str) -> Routes:
 
                 if route.is_accurate:
                     expires_at = datetime.datetime.now(
-                        datetime.timezone.utc
+                        datetime.UTC
                     ) + datetime.timedelta(days=28)
                 else:
                     expires_at = datetime.datetime.now(
-                        datetime.timezone.utc
+                        datetime.UTC
                     ) + datetime.timedelta(days=7)
 
                 cache.set(leg, route, expires_at=expires_at)

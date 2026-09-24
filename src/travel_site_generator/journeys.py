@@ -1,8 +1,8 @@
 import datetime
+import re
 from dataclasses import dataclass
 from enum import Enum, StrEnum
-import re
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from .places import Place, Places
 
@@ -145,11 +145,11 @@ def _parse(tokens: list[Token], places: Places) -> Journeys:
     is_first_to = True
 
     current_legs: list[JourneyLeg] = []
-    current_origin_place: Optional[Place] = None
-    current_origin_date: Optional[datetime.date] = None
-    current_destination_place: Optional[Place] = None
-    current_destination_date: Optional[datetime.date] = None
-    current_mode_of_transport: Optional[ModeOfTransport] = None
+    current_origin_place: Place | None = None
+    current_origin_date: datetime.date | None = None
+    current_destination_place: Place | None = None
+    current_destination_date: datetime.date | None = None
+    current_mode_of_transport: ModeOfTransport | None = None
 
     def append_current_leg():
         nonlocal \

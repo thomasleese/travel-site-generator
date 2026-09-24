@@ -1,16 +1,16 @@
-from dataclasses import dataclass
 import io
 import logging
 import pathlib
 import re
 import uuid
+from dataclasses import dataclass
 
 import frontmatter
 from frontmatter.default_handlers import BaseHandler
 
-from .journeys import load as load_journeys, Journeys, Journey
+from .journeys import Journey, Journeys
+from .journeys import load as load_journeys
 from .places import Places
-
 
 logger = logging.getLogger(__name__)
 

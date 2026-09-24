@@ -2,7 +2,6 @@ import io
 
 from travel_site_generator.trips import _load as load_trip
 
-
 HEATHROW = object()
 GATWICK = object()
 STANSTED = object()

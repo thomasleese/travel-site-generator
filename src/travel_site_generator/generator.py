@@ -7,15 +7,15 @@ from typing import Any
 
 import jinja2
 from markupsafe import Markup
+from mistune import HTMLRenderer as BaseHTTPRenderer
+from mistune import Markdown
 from mistune.util import escape as escape_text
-from mistune import HTMLRenderer as BaseHTTPRenderer, Markdown
 
 from .colours import Colours
 from .routes import Routes
 from .statistics import Statistics
 from .timeline import Timeline
 from .trips import Trips
-
 
 logger = logging.getLogger(__name__)
 

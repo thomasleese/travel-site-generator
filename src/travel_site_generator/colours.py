@@ -1,6 +1,6 @@
 import colorsys
-from dataclasses import dataclass
 import random
+from dataclasses import dataclass
 from functools import cached_property
 
 from .trips import Trip, Trips
@@ -17,7 +17,7 @@ class Colour:
         red = round(self.red * 255)
         green = round(self.green * 255)
         blue = round(self.blue * 255)
-        return "rgb({}, {}, {})".format(red, green, blue)
+        return f"rgb({red}, {green}, {blue})"
 
     @classmethod
     def random(cls):
