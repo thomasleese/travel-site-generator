@@ -1,37 +1,60 @@
 <div id="map" class="map"></div>
 
+<script src="https://unpkg.com/deck.gl@^9.4.0/dist.min.js"></script>
+
 <script type="module">
-    import * as maplibregl from "https://unpkg.com/maplibre-gl@^6.11.2/dist/maplibre-gl.mjs";
+  import * as maplibregl from "https://unpkg.com/maplibre-gl@^6.11.2/dist/maplibre-gl.mjs";
 
-    console.log("Initialising map...")
+  console.log("Initialising map...")
 
-    var map = new maplibregl.Map({
-        container: "map",
-        style: "https://tiles.openfreemap.org/styles/positron",
-        center: [0, 0],
-        zoom: 3
-    });
+  var map = new maplibregl.Map({
+    container: "map",
+    style: "https://tiles.openfreemap.org/styles/positron",
+    center: [0, 0],
+    zoom: 3
+  });
 
-     map.on("style.load", () => {
-         map.setProjection({ type: "globe" });
-    });
+  map.on("style.load", async () => {
+    map.setProjection({ type: "globe" });
+  });
 
-    map.on("load", async () => {
-        console.log("Map loaded")
+  await map.once("load");
 
-        map.addSource("data", {
-            type: "geojson",
-            data: "/data.json"
-        });
+  console.log("Map loaded")
 
-        map.addLayer({
-            id: "data",
-            type: "line",
-            source: 'data',
-            paint: {
-              "line-color": "#666",
-              "line-width": 2
-            }
-        });
-    });
+  const arcsLayer = new deck.ArcLayer({
+    data: "/arcs.json",
+
+    getSourcePosition: d => d.source,
+    getTargetPosition: d => d.target,
+    getSourceColor: d => d.colour,
+    getTargetColor: d => d.colour,
+
+    widthUnits: "pixels",
+    getWidth: 3,
+
+    parameters: { cullMode: "none" }
+  });
+
+  const pathsLayer = new deck.PathLayer({
+    data: "/paths.json",
+
+    getPath: d => d.path,
+    getColor: d => d.colour,
+
+    widthUnits: "pixels",
+    getWidth: 3,
+
+    parameters: {
+      depthCompare: "always",
+      cullMode: "back"
+    }
+  });
+
+  var overlay = new deck.MapLibreOverlay({
+    interleaved: true,
+    layers: [arcsLayer, pathsLayer]
+  });
+
+  map.addControl(overlay);
 </script>

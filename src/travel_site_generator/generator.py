@@ -12,6 +12,7 @@ from mistune import Markdown
 from mistune.util import escape as escape_text
 
 from .colours import Colours
+from .journeys import Journey, ModeOfTransport
 from .routes import Routes
 from .statistics import Statistics
 from .timeline import Timeline
@@ -27,31 +28,62 @@ def write_static(dst_path: Path):
     shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
 
 
-def write_geojson(trips: Trips, colours: Colours, routes: Routes, path: Path):
-    logger.info("Saving GeoJSON data to %s", path)
+def write_arcs(trips: Trips, colours: Colours, path: Path):
+    logger.info("Saving arcs data to %s", path)
 
-    features = [
+    data = [
         {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [point.longitude, point.latitude]
-                    for leg in journey.legs
-                    for point in routes[leg].points
-                ],
-            },
-            "style": {
-                "stroke": colours[trip].css_value,
-                "stroke-width": "3",
-            },
+            "source": [
+                leg.origin.place.longitude,
+                leg.origin.place.latitude,
+            ],
+            "target": [
+                leg.destination.place.longitude,
+                leg.destination.place.latitude,
+            ],
+            "colour": colours[trip].rgb_value,
         }
         for trip in trips
         for journey in trip.journeys
+        for leg in journey.legs
+        if leg.mode_of_transport == ModeOfTransport.PLANE
     ]
 
-    data = {"type": "FeatureCollection", "features": features}
+    with open(path, "w") as file:
+        file.write(json.dumps(data))
+
+
+def _ground_segments(journey: Journey, routes: Routes):
+    segments = []
+    current_points = []
+
+    for leg in journey.legs:
+        if leg.mode_of_transport == ModeOfTransport.PLANE:
+            if current_points:
+                segments.append(current_points)
+                current_points = []
+            continue
+
+        current_points.extend(routes[leg].points)
+
+    if current_points:
+        segments.append(current_points)
+
+    return segments
+
+
+def write_paths(trips: Trips, colours: Colours, routes: Routes, path: Path):
+    logger.info("Saving paths data to %s", path)
+
+    data = [
+        {
+            "path": [[point.longitude, point.latitude] for point in segment],
+            "colour": colours[trip].rgb_value,
+        }
+        for trip in trips
+        for journey in trip.journeys
+        for segment in _ground_segments(journey, routes)
+    ]
 
     with open(path, "w") as file:
         file.write(json.dumps(data))
@@ -127,5 +159,6 @@ def generate(
     path.mkdir(parents=True, exist_ok=True)
 
     write_static(path / "static")
+    write_arcs(trips, colours, path / "arcs.json")
+    write_paths(trips, colours, routes, path / "paths.json")
     write_index_html(trips, routes, timeline, statistics, path / "index.html")
-    write_geojson(trips, colours, routes, path / "data.json")
