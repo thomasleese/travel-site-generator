@@ -1,6 +1,8 @@
 <div id="map" class="map"></div>
 
-<script>
+<script type="module">
+    import * as maplibregl from "https://unpkg.com/maplibre-gl@^6.11.2/dist/maplibre-gl.mjs";
+
     console.log("Initialising map...")
 
     var map = new maplibregl.Map({
