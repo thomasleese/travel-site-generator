@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 
+from .countries import Countries
 from .journeys import ModeOfTransport
 from .routes import Routes
 from .trips import Trips
@@ -10,14 +11,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Statistics:
+    number_of_countries_visited: int
     total_distance_km_by_mode_of_transport: dict[ModeOfTransport, int]
 
     @staticmethod
-    def from_trips(trips: Trips, routes: Routes) -> Statistics:
+    def from_trips(trips: Trips, countries: Countries, routes: Routes) -> Statistics:
         return Statistics(
+            number_of_countries_visited=len(countries),
             total_distance_km_by_mode_of_transport=calculate_total_distance_km_by_mode_of_transport(
                 trips, routes
-            )
+            ),
         )
 
 
@@ -35,6 +38,6 @@ def calculate_total_distance_km_by_mode_of_transport(
     return values
 
 
-def load(trips: Trips, routes: Routes) -> Statistics:
+def load(trips: Trips, countries: Countries, routes: Routes) -> Statistics:
     logger.info("Loading statistics for %i trips", len(trips))
-    return Statistics.from_trips(trips, routes)
+    return Statistics.from_trips(trips, countries, routes)
