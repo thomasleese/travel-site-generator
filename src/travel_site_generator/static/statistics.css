@@ -23,11 +23,11 @@
     margin: .5rem 0;
 }
 
-.statistics-mode {
+.statistics-key {
     width: 24px;
     height: 24px;
 }
 
-.statistics-distance {
+.statistics-value {
     font-weight: bold;
 }
