@@ -125,7 +125,8 @@ $ travel-site-generator
 
 This will create a `site` directory with:
 - `index.html` - The main page with map, timeline, and statistics
-- `data.json` - GeoJSON data for the map
+- `arcs.json` - Flight data rendered as arcs on the map
+- `paths.json` - Ground route data for the map
 - `static/` - CSS styles and other static assets
 
 #### Command Line Options
