@@ -13,10 +13,16 @@ class Colour:
     blue: float
 
     @cached_property
+    def rgb_value(self) -> list[int]:
+        return [
+            round(self.red * 255),
+            round(self.green * 255),
+            round(self.blue * 255),
+        ]
+
+    @cached_property
     def css_value(self) -> str:
-        red = round(self.red * 255)
-        green = round(self.green * 255)
-        blue = round(self.blue * 255)
+        red, green, blue = self.rgb_value
         return f"rgb({red}, {green}, {blue})"
 
     @classmethod
