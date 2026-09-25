@@ -1,5 +1,7 @@
 <div id="map" class="map"></div>
 
+<script src="https://unpkg.com/deck.gl@^9.4.0/dist.min.js"></script>
+
 <script type="module">
     import * as maplibregl from "https://unpkg.com/maplibre-gl@^6.11.2/dist/maplibre-gl.mjs";
 
@@ -12,26 +14,25 @@
         zoom: 3
     });
 
-     map.on("style.load", () => {
-         map.setProjection({ type: "globe" });
+    map.on("style.load", () => {
+        map.setProjection({ type: "globe" });
     });
 
     map.on("load", async () => {
         console.log("Map loaded")
 
-        map.addSource("data", {
-            type: "geojson",
-            data: "/data.json"
+        const layer = new deck.GeoJsonLayer({
+            data: "/data.json",
+
+            filled: false,
+            stroked: true,
+            getLineWidth: 100,
         });
 
-        map.addLayer({
-            id: "data",
-            type: "line",
-            source: 'data',
-            paint: {
-              "line-color": "#666",
-              "line-width": 2
-            }
+        var overlay = new deck.MapLibreOverlay({
+            layers: [layer]
         });
+
+        map.addControl(overlay);
     });
 </script>
