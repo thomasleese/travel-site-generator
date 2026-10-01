@@ -16,15 +16,15 @@ wheels = [
 
 [[package]]
 name = "cachetout"
-version = "0.1.0"
+version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "msgspec" },
     { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/af/d6d9c05c4289c37d0ba44f8744520306b0bc0479f196646c8b9dea6d9fa0/cachetout-0.1.0.tar.gz", hash = "sha256:009126eddbd5b3fa21028b96564f1925aa809337a32e41fa7e59793e5b079f13", size = 3370, upload-time = "2026-07-26T19:21:51.255Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/26/8bfb5f04b03901ed1b0f890f7cbb3a307e79322eb9181c20de0886223f5a/cachetout-0.3.1.tar.gz", hash = "sha256:d4e3d50e618bab55d9c8a78073527c337e857653449ca663270a1da1173915e5", size = 3701, upload-time = "2026-09-25T09:36:25.919Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/e7/fbf006e31d35a0145bb2ef62463647bfd3cf0663ffc0801e97a39dc348c3/cachetout-0.1.0-py3-none-any.whl", hash = "sha256:18f4e98038f2ff5efccb98c7b3153aea64aa8b7c6c9e8e51bbc996500db24e48", size = 5729, upload-time = "2026-07-26T19:21:50.515Z" },
+    { url = "https://files.pythonhosted.org/packages/07/a8/703fac79ad79ee228e82c1076d2db74517cd2ff01d125d90f10625a00b60/cachetout-0.3.1-py3-none-any.whl", hash = "sha256:891d9c93e32dcf5935b953cf6887aaaac479a108c3cbc2948ea2028ab920b4d6", size = 6288, upload-time = "2026-09-25T09:36:25.195Z" },
 ]
 
 [[package]]
