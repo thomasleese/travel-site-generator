@@ -1,8 +1,8 @@
 import datetime
-import re
 from dataclasses import dataclass
 from enum import Enum, StrEnum
-from typing import NamedTuple
+
+from joml.tokeniser import Token, TokenType, tokenise
 
 from .places import Place, Places
 
@@ -63,69 +63,6 @@ class Journey:
 
 
 type Journeys = list[Journey]
-
-
-class Descriptor(Enum):
-    BY = "by"
-    FROM = "from"
-    ON = "on"
-    TO = "to"
-
-
-class TokenType(Enum):
-    DATE = 1
-    KEYWORD = 2
-    STRING = 3
-
-
-class Token(NamedTuple):
-    type: TokenType
-    value: str
-
-
-KEYWORDS = [descriptor.value for descriptor in Descriptor] + [
-    mode.value for mode in ModeOfTransport
-]
-
-DATE_PATTERN = r"\d{4}-\d{2}-\d{2}"
-
-
-def _tokenise(s: str) -> list[Token]:
-    tokens = []
-    i = 0
-    n = len(s)
-
-    while i < n:
-        if s[i].isspace():
-            i += 1
-            continue
-
-        if s[i] == "#":
-            while i < n and s[i] != "\n":
-                i += 1
-            continue
-
-        if i + 9 < n and re.match(DATE_PATTERN, s[i : i + 10]):
-            tokens.append(Token(TokenType.DATE, s[i : i + 10]))
-            i += 10
-            continue
-
-        for keyword in KEYWORDS:
-            if s[i : i + len(keyword)].lower() == keyword and (
-                i + len(keyword) == n or not s[i + len(keyword)].isalpha()
-            ):
-                tokens.append(Token(TokenType.KEYWORD, keyword))
-                i += len(keyword)
-                continue
-
-        j = i
-        while j < n and not s[j].isspace() and s[j] not in ["#"]:
-            j += 1
-        if j > i:
-            tokens.append(Token(TokenType.STRING, s[i:j]))
-        i = j
-
-    return tokens
 
 
 class CurrentAction(Enum):
@@ -224,37 +161,37 @@ def _parse(tokens: list[Token], places: Places) -> Journeys:
             raise ValueError("Unexpected date")
 
     def handle_keyword(token):
-        nonlocal current_action, current_mode_of_transport, is_first_from, is_first_to
+        nonlocal current_action, is_first_from, is_first_to
 
-        match current_action:
-            case CurrentAction.EXPECTING_DESCRIPTOR:
-                match token.value:
-                    case Descriptor.BY.value:
-                        current_action = CurrentAction.EXPECTING_MODE_OF_TRANSPORT
-                    case Descriptor.FROM.value:
-                        if not is_first_from:
-                            append_current_journey()
+        if current_action != CurrentAction.EXPECTING_DESCRIPTOR:
+            raise ValueError(f"Unexpected keyword '{token.value}'")
 
-                        current_action = CurrentAction.EXPECTING_SOURCE
-                        is_first_from = False
-                    case Descriptor.ON.value:
-                        current_action = CurrentAction.EXPECTING_DATE
-                    case Descriptor.TO.value:
-                        if not is_first_to:
-                            append_current_leg()
+        match token.value:
+            case "by":
+                current_action = CurrentAction.EXPECTING_MODE_OF_TRANSPORT
+            case "from":
+                if not is_first_from:
+                    append_current_journey()
 
-                        current_action = CurrentAction.EXPECTING_DESTINATION
-                        is_first_to = False
-                    case _:
-                        raise ValueError(f"Unexpected keyword '{token.value}'")
-            case CurrentAction.EXPECTING_MODE_OF_TRANSPORT:
-                current_mode_of_transport = ModeOfTransport(token.value)
-                current_action = CurrentAction.EXPECTING_DESCRIPTOR
+                current_action = CurrentAction.EXPECTING_SOURCE
+                is_first_from = False
+            case "on":
+                current_action = CurrentAction.EXPECTING_DATE
+            case "to":
+                if not is_first_to:
+                    append_current_leg()
+
+                current_action = CurrentAction.EXPECTING_DESTINATION
+                is_first_to = False
             case _:
                 raise ValueError(f"Unexpected keyword '{token.value}'")
 
     def handle_string(token):
-        nonlocal current_action, current_origin_place, current_destination_place
+        nonlocal \
+            current_action, \
+            current_origin_place, \
+            current_destination_place, \
+            current_mode_of_transport
 
         match current_action:
             case CurrentAction.EXPECTING_SOURCE:
@@ -262,6 +199,9 @@ def _parse(tokens: list[Token], places: Places) -> Journeys:
                 current_action = CurrentAction.EXPECTING_DESCRIPTOR
             case CurrentAction.EXPECTING_DESTINATION:
                 current_destination_place = places[token.value]
+                current_action = CurrentAction.EXPECTING_DESCRIPTOR
+            case CurrentAction.EXPECTING_MODE_OF_TRANSPORT:
+                current_mode_of_transport = ModeOfTransport(token.value)
                 current_action = CurrentAction.EXPECTING_DESCRIPTOR
 
     for token in tokens:
@@ -279,4 +219,4 @@ def _parse(tokens: list[Token], places: Places) -> Journeys:
 
 
 def load(string: str, places: Places) -> Journeys:
-    return sorted(_parse(_tokenise(string), places))
+    return sorted(_parse(tokenise(string), places))
