@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 
 from travel_site_generator.countries import load as load_countries
-from travel_site_generator.journeys import Journey, JourneyLeg, ModeOfTransport, Stop
+from travel_site_generator.journeys import Journey, Leg, ModeOfTransport, Stop
 from travel_site_generator.places import Place
 from travel_site_generator.trips import Trip
 
@@ -21,8 +21,8 @@ def leg(
     origin_country_code: str,
     destination_country_code: str,
     mode_of_transport: ModeOfTransport = ModeOfTransport.PLANE,
-) -> JourneyLeg:
-    return JourneyLeg(
+) -> Leg:
+    return Leg(
         origin=stop(origin_country_code),
         destination=stop(destination_country_code),
         mode_of_transport=mode_of_transport,
