@@ -1,9 +1,9 @@
 import datetime
 from dataclasses import dataclass
-from enum import StrEnum
 
 import joml
 
+from .mode_of_transport import ModeOfTransport
 from .places import Place, Places
 
 
@@ -19,19 +19,6 @@ class Stop:
         if not isinstance(other, Stop):
             return NotImplemented
         return self.date < other.date
-
-
-class ModeOfTransport(StrEnum):
-    BICYCLE = "bicycle"
-    BUS = "bus"
-    CAR = "car"
-    FERRY = "ferry"
-    FOOT = "foot"
-    METRO = "metro"
-    MOTORCYCLE = "motorcycle"
-    PLANE = "plane"
-    TRAIN = "train"
-    TRAM = "tram"
 
 
 @dataclass(frozen=True)

@@ -10,7 +10,8 @@ from google.api_core.client_options import ClientOptions
 from google.maps import routing_v2
 from google.type.latlng_pb2 import LatLng
 
-from .journeys import Leg, ModeOfTransport, Stop
+from .journeys import Leg, Stop
+from .mode_of_transport import ModeOfTransport
 from .trips import Trips
 
 logger = logging.getLogger(__name__)
