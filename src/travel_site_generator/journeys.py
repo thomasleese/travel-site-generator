@@ -1,8 +1,8 @@
 import datetime
 from dataclasses import dataclass
-from enum import Enum, StrEnum
+from enum import StrEnum
 
-from joml.tokeniser import Token, TokenType, tokenise
+import joml
 
 from .places import Place, Places
 
@@ -65,158 +65,28 @@ class Journey:
 type Journeys = list[Journey]
 
 
-class CurrentAction(Enum):
-    EXPECTING_DATE = 0
-    EXPECTING_DESCRIPTOR = 1
-    EXPECTING_DESTINATION = 2
-    EXPECTING_MODE_OF_TRANSPORT = 3
-    EXPECTING_SOURCE = 4
+def parsed_stop_to_stop(parsed_stop: joml.Stop, places: Places) -> Stop:
+    return Stop(places[parsed_stop.place_name], parsed_stop.date)
 
 
-def _parse(tokens: list[Token], places: Places) -> Journeys:
-    journeys = []
+def parsed_leg_to_leg(parsed_leg: joml.Leg, places: Places) -> JourneyLeg:
+    return JourneyLeg(
+        origin=parsed_stop_to_stop(parsed_leg.origin, places),
+        destination=parsed_stop_to_stop(parsed_leg.destination, places),
+        mode_of_transport=ModeOfTransport(parsed_leg.mode_of_transport),
+    )
 
-    current_action = CurrentAction.EXPECTING_DESCRIPTOR
 
-    is_first_from = True
-    is_first_to = True
-
-    current_legs: list[JourneyLeg] = []
-    current_origin_place: Place | None = None
-    current_origin_date: datetime.date | None = None
-    current_destination_place: Place | None = None
-    current_destination_date: datetime.date | None = None
-    current_mode_of_transport: ModeOfTransport | None = None
-
-    def append_current_leg():
-        nonlocal \
-            current_legs, \
-            current_origin_place, \
-            current_origin_date, \
-            current_destination_place, \
-            current_destination_date
-
-        if current_origin_place is None:
-            raise ValueError("No origin stop is defined yet")
-        elif current_destination_place is None:
-            raise ValueError("No destination stop is defined yet")
-        elif current_origin_date is None:
-            raise ValueError("No origin date is defined yet")
-        elif current_destination_date is None:
-            raise ValueError("No destination date is defined yet")
-        elif current_mode_of_transport is None:
-            raise ValueError("No mode of transport is defined yet")
-
-        origin = Stop(place=current_origin_place, date=current_origin_date)
-        destination = Stop(
-            place=current_destination_place, date=current_destination_date
-        )
-
-        current_legs.append(
-            JourneyLeg(
-                origin=origin,
-                destination=destination,
-                mode_of_transport=current_mode_of_transport,
-            )
-        )
-
-        current_origin_place = current_destination_place
-        current_origin_date = current_destination_date
-        current_destination_place = None
-
-    def append_current_journey():
-        nonlocal \
-            journeys, \
-            is_first_to, \
-            current_legs, \
-            current_origin_place, \
-            current_origin_date, \
-            current_destination_place, \
-            current_destination_date, \
-            current_mode_of_transport
-
-        append_current_leg()
-
-        journeys.append(Journey(legs=current_legs))
-
-        is_first_to = True
-        current_legs = []
-        current_origin_place = None
-        current_origin_date = None
-        current_destination_place = None
-        current_destination_date = None
-        current_mode_of_transport = None
-
-    def handle_date(token):
-        nonlocal current_action, current_origin_date, current_destination_date
-
-        if current_action == CurrentAction.EXPECTING_DATE:
-            date = datetime.date.fromisoformat(token.value)
-            if current_origin_date is None:
-                current_origin_date = date
-
-            current_destination_date = date
-            current_action = CurrentAction.EXPECTING_DESCRIPTOR
-        else:
-            raise ValueError("Unexpected date")
-
-    def handle_keyword(token):
-        nonlocal current_action, is_first_from, is_first_to
-
-        if current_action != CurrentAction.EXPECTING_DESCRIPTOR:
-            raise ValueError(f"Unexpected keyword '{token.value}'")
-
-        match token.value:
-            case "by":
-                current_action = CurrentAction.EXPECTING_MODE_OF_TRANSPORT
-            case "from":
-                if not is_first_from:
-                    append_current_journey()
-
-                current_action = CurrentAction.EXPECTING_SOURCE
-                is_first_from = False
-            case "on":
-                current_action = CurrentAction.EXPECTING_DATE
-            case "to":
-                if not is_first_to:
-                    append_current_leg()
-
-                current_action = CurrentAction.EXPECTING_DESTINATION
-                is_first_to = False
-            case _:
-                raise ValueError(f"Unexpected keyword '{token.value}'")
-
-    def handle_string(token):
-        nonlocal \
-            current_action, \
-            current_origin_place, \
-            current_destination_place, \
-            current_mode_of_transport
-
-        match current_action:
-            case CurrentAction.EXPECTING_SOURCE:
-                current_origin_place = places[token.value]
-                current_action = CurrentAction.EXPECTING_DESCRIPTOR
-            case CurrentAction.EXPECTING_DESTINATION:
-                current_destination_place = places[token.value]
-                current_action = CurrentAction.EXPECTING_DESCRIPTOR
-            case CurrentAction.EXPECTING_MODE_OF_TRANSPORT:
-                current_mode_of_transport = ModeOfTransport(token.value)
-                current_action = CurrentAction.EXPECTING_DESCRIPTOR
-
-    for token in tokens:
-        match token.type:
-            case TokenType.DATE:
-                handle_date(token)
-            case TokenType.KEYWORD:
-                handle_keyword(token)
-            case TokenType.STRING:
-                handle_string(token)
-
-    append_current_journey()
-
-    return journeys
+def parsed_journey_to_journey(parsed_journey: joml.Journey, places: Places) -> Journey:
+    return Journey(legs=[parsed_leg_to_leg(leg, places) for leg in parsed_journey.legs])
 
 
 def load(string: str, places: Places) -> Journeys:
-    return sorted(_parse(tokenise(string), places))
+    parsed_journeys = joml.loads(string)
+
+    journeys = [
+        parsed_journey_to_journey(parsed_journey, places)
+        for parsed_journey in parsed_journeys
+    ]
+
+    return sorted(journeys)
