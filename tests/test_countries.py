@@ -15,7 +15,7 @@ def place(country_code: str):
 
 
 def stop(country_code: str, day: int = 1) -> Stop:
-    return Stop(place=place(country_code), date=date(2020, 1, day))
+    return Stop(place=place(country_code), date=date(2020, 1, day), time=None)
 
 
 def leg(

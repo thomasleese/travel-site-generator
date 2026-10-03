@@ -77,17 +77,39 @@ class LegWrapper:
         if self.leg.mode_of_transport in [ModeOfTransport.CAR, ModeOfTransport.FOOT]:
             return None
 
+        # TODO: Pick a date with the same day as the journey
+        date = self.leg.origin.date - datetime.timedelta(days=1)
+        time = self.leg.origin.time or datetime.time(10)
         tzinfo = self.leg.origin.place.tzinfo
 
-        # FIXME: Pick a date with the same day as the journey
-        # FIXME: Don't pick an arbitrary hour
-
-        return datetime.datetime.now(datetime.UTC).replace(
-            hour=10, minute=0, second=0, tzinfo=tzinfo
-        ) - datetime.timedelta(days=1)
+        return datetime.datetime(
+            year=date.year,
+            month=date.month,
+            day=date.day,
+            hour=time.hour,
+            minute=time.minute,
+            second=time.second,
+            tzinfo=tzinfo,
+        )
 
     def to_arrival_time(self) -> datetime.datetime | None:
-        return None
+        if self.leg.mode_of_transport in [ModeOfTransport.CAR, ModeOfTransport.FOOT]:
+            return None
+
+        # TODO: Pick a date with the same day as the journey
+        date = self.leg.destination.date - datetime.timedelta(days=1)
+        time = self.leg.destination.time or datetime.time(10)
+        tzinfo = self.leg.destination.place.tzinfo
+
+        return datetime.datetime(
+            year=date.year,
+            month=date.month,
+            day=date.day,
+            hour=time.hour,
+            minute=time.minute,
+            second=time.second,
+            tzinfo=tzinfo,
+        )
 
     def to_travel_mode_and_transit_preferences(
         self,

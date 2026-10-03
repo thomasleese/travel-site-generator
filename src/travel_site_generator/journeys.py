@@ -11,9 +11,13 @@ from .places import Place, Places
 class Stop:
     place: Place
     date: datetime.date
+    time: datetime.time | None
 
     def __str__(self):
-        return f"{self.place} ({self.date})"
+        if time := self.time:
+            return f"{self.date} ({self.date} at {time})"
+        else:
+            return f"{self.place} ({self.date})"
 
     def __lt__(self, other):
         if not isinstance(other, Stop):
@@ -53,7 +57,11 @@ type Journeys = list[Journey]
 
 
 def parsed_stop_to_stop(parsed_stop: joml.Stop, places: Places) -> Stop:
-    return Stop(places[parsed_stop.place_name], parsed_stop.date)
+    return Stop(
+        place=places[parsed_stop.place_name],
+        date=parsed_stop.date,
+        time=parsed_stop.time,
+    )
 
 
 def parsed_leg_to_leg(parsed_leg: joml.Leg, places: Places) -> Leg:

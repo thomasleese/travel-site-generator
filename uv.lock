@@ -413,11 +413,11 @@ wheels = [
 
 [[package]]
 name = "joml"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/20/fa/9f09c836739ec1d927f38e1e653c5f781fd850eb740b30fe39b4c617901a/joml-0.1.0.tar.gz", hash = "sha256:51cc79b072dbbe7b79e05c58adc751e89357b7bbef61b4234761f909ab51017d", size = 3220, upload-time = "2026-10-03T15:42:47.721Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/f2/3d6fc0e2015cf404678b1c4a6db3eeb753cb14755bade1821592ded71284/joml-0.2.0.tar.gz", hash = "sha256:488c594d2f985287a48f5cc91c944b9c61daa0377a313fd160a01c3f8f12c459", size = 3427, upload-time = "2026-10-03T17:00:00.116Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/c4/93079cab738a98d3be89419f7b5673503cd0652751bbcbe7bfe3c13be9ae/joml-0.1.0-py3-none-any.whl", hash = "sha256:c8cf9a37e4daba3554b10fe809fdc77c673f4b34efdcd6fa46b1a677a266539a", size = 4260, upload-time = "2026-10-03T15:42:46.901Z" },
+    { url = "https://files.pythonhosted.org/packages/81/43/8949215962f5636ffec016be904ca67059fa702c61abec4a761e7ff7b254/joml-0.2.0-py3-none-any.whl", hash = "sha256:5dee27108e779672cc909fb841464a9f38a52e708cc07acec16dc76b9a136b76", size = 4469, upload-time = "2026-10-03T16:59:59.203Z" },
 ]
 
 [[package]]
@@ -725,7 +725,7 @@ requires-dist = [
     { name = "google-maps-routing", specifier = ">=0.10.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "jinja2", specifier = ">=3.1.6" },
-    { name = "joml", specifier = ">=0.1.0" },
+    { name = "joml", specifier = ">=0.2.0" },
     { name = "mistune", specifier = ">=3.2.0" },
     { name = "polyline", specifier = ">=2.0.4" },
     { name = "python-frontmatter", specifier = ">=1.1.0" },
