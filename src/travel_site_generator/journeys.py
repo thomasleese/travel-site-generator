@@ -35,7 +35,7 @@ class ModeOfTransport(StrEnum):
 
 
 @dataclass(frozen=True)
-class JourneyLeg:
+class Leg:
     origin: Stop
     destination: Stop
     mode_of_transport: ModeOfTransport
@@ -46,7 +46,7 @@ class JourneyLeg:
 
 @dataclass(frozen=True)
 class Journey:
-    legs: list[JourneyLeg]
+    legs: list[Leg]
 
     def __lt__(self, other):
         if not isinstance(other, Journey):
@@ -69,8 +69,8 @@ def parsed_stop_to_stop(parsed_stop: joml.Stop, places: Places) -> Stop:
     return Stop(places[parsed_stop.place_name], parsed_stop.date)
 
 
-def parsed_leg_to_leg(parsed_leg: joml.Leg, places: Places) -> JourneyLeg:
-    return JourneyLeg(
+def parsed_leg_to_leg(parsed_leg: joml.Leg, places: Places) -> Leg:
+    return Leg(
         origin=parsed_stop_to_stop(parsed_leg.origin, places),
         destination=parsed_stop_to_stop(parsed_leg.destination, places),
         mode_of_transport=ModeOfTransport(parsed_leg.mode_of_transport),

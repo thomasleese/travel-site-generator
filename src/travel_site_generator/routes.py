@@ -10,7 +10,7 @@ from google.api_core.client_options import ClientOptions
 from google.maps import routing_v2
 from google.type.latlng_pb2 import LatLng
 
-from .journeys import JourneyLeg, ModeOfTransport, Stop
+from .journeys import Leg, ModeOfTransport, Stop
 from .trips import Trips
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class Route:
 
 
 class LegWrapper:
-    def __init__(self, leg: JourneyLeg):
+    def __init__(self, leg: Leg):
         self.leg = leg
 
     @staticmethod
@@ -145,7 +145,7 @@ class LegWrapper:
                 )
 
 
-type Routes = dict[JourneyLeg, Route]
+type Routes = dict[Leg, Route]
 
 
 class RouteFetcher:
@@ -153,7 +153,7 @@ class RouteFetcher:
         client_options = ClientOptions(api_key=gmaps_api_key)
         self.client = routing_v2.RoutesClient(client_options=client_options)
 
-    def fetch(self, leg: JourneyLeg) -> Route:
+    def fetch(self, leg: Leg) -> Route:
         leg_wrapper = LegWrapper(leg)
 
         origin = leg_wrapper.to_origin()

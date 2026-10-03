@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 
 from .colours import Colour, Colours
-from .journeys import Journey, JourneyLeg, ModeOfTransport, Stop
+from .journeys import Journey, Leg, ModeOfTransport, Stop
 from .places import Place
 from .routes import Routes
 from .trips import Trip, Trips
@@ -24,7 +24,7 @@ class TimelineEntry:
         return TimelineEntry(place=stop.place)
 
     @staticmethod
-    def from_leg(leg: JourneyLeg, routes: Routes) -> TimelineEntry:
+    def from_leg(leg: Leg, routes: Routes) -> TimelineEntry:
         return TimelineEntry(
             origin_date=leg.origin.date,
             destination_date=leg.destination.date,
