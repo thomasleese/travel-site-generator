@@ -2,7 +2,8 @@ import uuid
 from datetime import date
 
 from travel_site_generator.countries import load as load_countries
-from travel_site_generator.journeys import Journey, Leg, ModeOfTransport, Stop
+from travel_site_generator.journeys import Journey, Leg, Stop
+from travel_site_generator.mode_of_transport import ModeOfTransport
 from travel_site_generator.places import Place
 from travel_site_generator.trips import Trip
 
@@ -14,7 +15,7 @@ def place(country_code: str):
 
 
 def stop(country_code: str, day: int = 1) -> Stop:
-    return Stop(place=place(country_code), date=date(2020, 1, day))
+    return Stop(place=place(country_code), date=date(2020, 1, day), time=None)
 
 
 def leg(

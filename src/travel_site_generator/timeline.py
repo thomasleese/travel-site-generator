@@ -3,7 +3,8 @@ import logging
 from dataclasses import dataclass
 
 from .colours import Colour, Colours
-from .journeys import Journey, Leg, ModeOfTransport, Stop
+from .journeys import Journey, Leg, Stop
+from .mode_of_transport import ModeOfTransport
 from .places import Place
 from .routes import Routes
 from .trips import Trip, Trips

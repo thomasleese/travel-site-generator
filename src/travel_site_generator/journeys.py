@@ -1,9 +1,9 @@
 import datetime
 from dataclasses import dataclass
-from enum import StrEnum
 
 import joml
 
+from .mode_of_transport import ModeOfTransport
 from .places import Place, Places
 
 
@@ -11,27 +11,18 @@ from .places import Place, Places
 class Stop:
     place: Place
     date: datetime.date
+    time: datetime.time | None
 
     def __str__(self):
-        return f"{self.place} ({self.date})"
+        if time := self.time:
+            return f"{self.date} ({self.date} at {time})"
+        else:
+            return f"{self.place} ({self.date})"
 
     def __lt__(self, other):
         if not isinstance(other, Stop):
             return NotImplemented
         return self.date < other.date
-
-
-class ModeOfTransport(StrEnum):
-    BICYCLE = "bicycle"
-    BUS = "bus"
-    CAR = "car"
-    FERRY = "ferry"
-    FOOT = "foot"
-    METRO = "metro"
-    MOTORCYCLE = "motorcycle"
-    PLANE = "plane"
-    TRAIN = "train"
-    TRAM = "tram"
 
 
 @dataclass(frozen=True)
@@ -66,7 +57,11 @@ type Journeys = list[Journey]
 
 
 def parsed_stop_to_stop(parsed_stop: joml.Stop, places: Places) -> Stop:
-    return Stop(places[parsed_stop.place_name], parsed_stop.date)
+    return Stop(
+        place=places[parsed_stop.place_name],
+        date=parsed_stop.date,
+        time=parsed_stop.time,
+    )
 
 
 def parsed_leg_to_leg(parsed_leg: joml.Leg, places: Places) -> Leg:

@@ -12,7 +12,8 @@ from mistune import Markdown
 from mistune.util import escape as escape_text
 
 from .colours import Colours
-from .journeys import Journey, ModeOfTransport
+from .journeys import Journey
+from .mode_of_transport import ModeOfTransport
 from .routes import Routes
 from .statistics import Statistics
 from .timeline import Timeline

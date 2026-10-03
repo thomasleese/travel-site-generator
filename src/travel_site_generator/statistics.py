@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 
 from .countries import Countries
-from .journeys import ModeOfTransport
+from .mode_of_transport import ModeOfTransport
 from .routes import Routes
 from .trips import Trips
 
