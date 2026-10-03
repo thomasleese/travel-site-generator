@@ -217,7 +217,7 @@ def load(trips: Trips, gmaps_api_key: str) -> Routes:
                     routes[leg] = LegWrapper(leg).to_fallback_route()
                     continue
 
-                if cached_route := cache.get(leg, type=Route):
+                if cached_route := cache.get(leg, type=Route, default=None):
                     routes[leg] = cached_route
                     continue
 
