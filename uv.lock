@@ -282,7 +282,7 @@ wheels = [
 
 [[package]]
 name = "google-maps-routing"
-version = "0.11.1"
+version = "0.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core", extra = ["grpc"] },
@@ -292,9 +292,9 @@ dependencies = [
     { name = "proto-plus" },
     { name = "protobuf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/7d/3e5caaf4b089918b9100ef8d36a249a7e960ce08a5fe28be88e6b8a84c1f/google_maps_routing-0.11.1.tar.gz", hash = "sha256:4a7715a1725a7f65fc1cf825f68de69d0ec45cce49ac64a30ad837a19f075c25", size = 78838, upload-time = "2026-09-03T22:31:20.725Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/7c/a298fb0fb58cea18293e6f04d2ce34ea3f7561145ffa02939ab6757a199e/google_maps_routing-0.11.2.tar.gz", hash = "sha256:50455078321a1937739237bd4f6d308525ecb66b8f814f22a698d2b9395532be", size = 78856, upload-time = "2026-10-01T18:19:11.3Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/24/0774aa8ea19072c6fb626524da25c9038e614a5e398b7edb88f555b8d4bd/google_maps_routing-0.11.1-py3-none-any.whl", hash = "sha256:4301784ef665f5ae5623614f4047e25ade9f3df862434f96399d89c6ec5eadbc", size = 102239, upload-time = "2026-09-03T22:30:43.618Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/ef/cced8fddaad3ee2a91d36db0bc25bd38140bc4fe29644484f6b5d31f87a5/google_maps_routing-0.11.2-py3-none-any.whl", hash = "sha256:945d1d01628efdfab9d1416d85e120d08492f10e7129560a95ae2e831c7d5071", size = 102244, upload-time = "2026-10-01T18:13:36.11Z" },
 ]
 
 [[package]]
